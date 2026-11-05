@@ -1,0 +1,15 @@
+# ==========================================
+# CONFIGURACIÓN DE RCLONE PARA GOOGLE DRIVE
+# Guarda este archivo como: .docker/backup/rclone.conf
+# ==========================================
+
+[gdrive1]
+type = drive
+scope = drive
+token = {"access_token":"TU_ACCESS_TOKEN","token_type":"Bearer","refresh_token":"TU_REFRESH_TOKEN","expiry":"2026-10-01T00:00:00.000000-03:00"}
+
+[gdrive2]
+type = drive
+scope = drive
+token = {"access_token":"TU_ACCESS_TOKEN","token_type":"Bearer","refresh_token":"TU_REFRESH_TOKEN","expiry":"2026-10-01T00:00:00.000000-03:00"}
+

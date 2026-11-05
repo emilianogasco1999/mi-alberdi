@@ -1,0 +1,12 @@
+{
+  "name": "@mi-alberdi/config",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Configuraciones base de TypeScript compartidas para el monorepo Mi Alberdi",
+  "files": [
+    "tsconfig.base.json",
+    "tsconfig.node.json",
+    "tsconfig.react.json"
+  ]
+}
+

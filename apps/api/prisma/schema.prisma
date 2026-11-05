@@ -1,0 +1,696 @@
+// =============================================================================
+// MI ALBERDI — Esquema Prisma Canónico (PostgreSQL)
+// Basado en .doc/mi-alberdi.dbml y la skill @mi-alberdi-db
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// ENUMS DEL DOMINIO
+// =============================================================================
+
+enum RolUsuario {
+  vecino
+  comerciante
+  moderador
+  admin
+
+  @@map("rol_usuario")
+}
+
+enum EstadoCuenta {
+  activo
+  suspendido
+  pendiente_eliminacion
+
+  @@map("estado_cuenta")
+}
+
+enum CodigoPlan {
+  gratis
+  plata
+  oro
+
+  @@map("codigo_plan")
+}
+
+enum TipoPerfilComercial {
+  comercio
+  oficio
+  profesional
+  emprendimiento
+
+  @@map("tipo_perfil_comercial")
+}
+
+enum EstadoNegocio {
+  borrador
+  activo
+  pausado
+  suspendido
+
+  @@map("estado_negocio")
+}
+
+enum EstadoVerificacion {
+  no_solicitada
+  pendiente
+  aprobada
+  rechazada
+
+  @@map("estado_verificacion")
+}
+
+enum TipoPublicacion {
+  servicio
+  producto
+
+  @@map("tipo_publicacion")
+}
+
+enum EstadoPublicacion {
+  borrador
+  activa
+  pausada
+  pausada_por_plan
+  oculta_por_reportes
+  suspendida
+
+  @@map("estado_publicacion")
+}
+
+enum ModalidadAtencion {
+  horarios_fijos
+  por_turnos
+  por_pedido
+  atencion_24hs
+  solo_whatsapp
+
+  @@map("modalidad_atencion")
+}
+
+enum AlcanceEnvio {
+  sin_envio
+  solo_alberdi
+  alberdi_y_alrededores
+  todo_el_pais
+
+  @@map("alcance_envio")
+}
+
+enum EstadoMembresia {
+  activa
+  en_prueba
+  vencida
+  cancelada
+
+  @@map("estado_membresia")
+}
+
+enum EstadoPago {
+  pendiente
+  aprobado
+  rechazado
+  reembolsado
+
+  @@map("estado_pago")
+}
+
+enum TipoEventoAnalitica {
+  vista_negocio
+  vista_publicacion
+  clic_whatsapp
+  clic_telefono
+  clic_red_social
+  escaneo_qr
+  vista_reel
+
+  @@map("tipo_evento_analitica")
+}
+
+enum EstadoModeracion {
+  pendiente
+  en_revision
+  resuelto_aceptado
+  resuelto_desestimado
+
+  @@map("estado_moderacion")
+}
+
+// =============================================================================
+// 1. IDENTIDAD Y ACCESO
+// =============================================================================
+
+model PerfilUsuario {
+  id                 String       @id @default(uuid()) @db.Uuid
+  nombre             String       @db.VarChar(80)
+  apellido           String?      @db.VarChar(80)
+  email              String       @unique @db.VarChar(255)
+  passwordHash       String       @map("password_hash")
+  telefono           String?      @db.VarChar(30)
+  avatarUrl          String?      @map("avatar_url")
+  rol                RolUsuario   @default(vecino)
+  estado             EstadoCuenta @default(activo)
+  puedeProbarPremium Boolean      @default(true) @map("puede_probar_premium")
+  tokenVersion       Int          @default(0) @map("token_version")
+  creadoEn           DateTime     @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn      DateTime     @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  negocios                   Negocio[]
+  auditoriasAcceso           AuditoriaAcceso[]
+  pagosMembresia             PagoMembresia[]
+  opiniones                  Opinion[]
+  solicitudesVerificacion    SolicitudVerificacion[] @relation("SolicitanteVerificacion")
+  verificacionesRevisadas    SolicitudVerificacion[] @relation("RevisorVerificacion")
+  reportesRealizados         ReporteModeracion[]     @relation("ReportanteModeracion")
+  reportesRevisados          ReporteModeracion[]     @relation("RevisorModeracion")
+  feedbacksEnviados          FeedbackPlataforma[]
+
+  @@index([rol])
+  @@index([estado])
+  @@map("perfiles_usuarios")
+}
+
+model AuditoriaAcceso {
+  id              String        @id @default(uuid()) @db.Uuid
+  usuarioId       String        @map("usuario_id") @db.Uuid
+  ipAddress       String?       @map("ip_address") @db.VarChar(64)
+  userAgent       String?       @map("user_agent")
+  dispositivoHash String?       @map("dispositivo_hash") @db.VarChar(128)
+  creadoEn        DateTime      @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  usuario PerfilUsuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, creadoEn])
+  @@map("auditoria_accesos")
+}
+
+// =============================================================================
+// 2. PLANES, MEMBRESÍAS Y MONETIZACIÓN
+// =============================================================================
+
+model PlanCatalogo {
+  codigo                 CodigoPlan @id
+  nombre                 String     @db.VarChar(50)
+  precioMensualArs       Decimal    @map("precio_mensual_ars") @db.Decimal(10, 2)
+  maxPublicaciones       Int        @map("max_publicaciones")
+  maxFotosPorPublicacion Int        @default(5) @map("max_fotos_por_publicacion")
+  cuposDestacados        Int        @default(0) @map("cupos_destacados")
+  maxSucursales          Int        @default(1) @map("max_sucursales")
+  maxReelsActivos        Int        @default(0) @map("max_reels_activos")
+  prioridadBase          Int        @default(0) @map("prioridad_base")
+  permiteEstadisticas    Boolean    @default(false) @map("permite_estadisticas")
+  permitePinDestacado    Boolean    @default(false) @map("permite_pin_destacado")
+  permiteBanner          Boolean    @default(false) @map("permite_banner")
+  permiteAsistenteIa     Boolean    @default(false) @map("permite_asistente_ia")
+  caracteristicasBase    Json       @default("{}") @map("caracteristicas_base")
+  activo                 Boolean    @default(true)
+  creadoEn               DateTime   @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn          DateTime   @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  membresias           Membresia[]
+  codigosPromocionales CodigoPromocional[]
+  negocios             Negocio[]
+
+  @@map("planes_catalogo")
+}
+
+model Membresia {
+  id                  String          @id @default(uuid()) @db.Uuid
+  negocioId           String          @map("negocio_id") @db.Uuid
+  planCodigo          CodigoPlan      @map("plan_codigo")
+  estado              EstadoMembresia @default(activa)
+  fechaInicio         DateTime        @default(now()) @map("fecha_inicio") @db.Timestamptz(6)
+  fechaFin            DateTime        @map("fecha_fin") @db.Timestamptz(6)
+  esPrueba            Boolean         @default(false) @map("es_prueba")
+  codigoPromocionalId String?         @map("codigo_promocional_id") @db.Uuid
+  autoRenovar         Boolean         @default(false) @map("auto_renovar")
+  creadoEn            DateTime        @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn       DateTime        @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  negocio           Negocio            @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  plan              PlanCatalogo       @relation(fields: [planCodigo], references: [codigo])
+  codigoPromocional CodigoPromocional? @relation(fields: [codigoPromocionalId], references: [id])
+  pagos             PagoMembresia[]
+
+  @@index([negocioId, estado])
+  @@index([fechaFin])
+  @@map("membresias")
+}
+
+model PagoMembresia {
+  id                String     @id @default(uuid()) @db.Uuid
+  membresiaId       String     @map("membresia_id") @db.Uuid
+  negocioId         String     @map("negocio_id") @db.Uuid
+  usuarioId         String     @map("usuario_id") @db.Uuid
+  montoArs          Decimal    @map("monto_ars") @db.Decimal(10, 2)
+  pasarela          String     @default("mercadopago") @db.VarChar(30)
+  referenciaExterna String?    @unique @map("referencia_externa") @db.VarChar(120)
+  estado            EstadoPago @default(pendiente)
+  comprobanteUrl    String?    @map("comprobante_url")
+  metadataPasarela  Json?      @map("metadata_pasarela")
+  pagadoEn          DateTime?  @map("pagado_en") @db.Timestamptz(6)
+  creadoEn          DateTime   @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn     DateTime   @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  membresia Membresia     @relation(fields: [membresiaId], references: [id], onDelete: Cascade)
+  negocio   Negocio       @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  usuario   PerfilUsuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([negocioId, estado])
+  @@map("pagos_membresia")
+}
+
+model CodigoPromocional {
+  id           String     @id @default(uuid()) @db.Uuid
+  codigo       String     @unique @db.VarChar(40)
+  descripcion  String?
+  planOtorgado CodigoPlan @map("plan_otorgado")
+  diasVigencia Int        @default(30) @map("dias_vigencia")
+  usosMaximos  Int        @default(1) @map("usos_maximos")
+  usosActuales Int        @default(0) @map("usos_actuales")
+  validoHasta  DateTime?  @map("valido_hasta") @db.Timestamptz(6)
+  activo       Boolean    @default(true)
+  creadoEn     DateTime   @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn DateTime  @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  plan       PlanCatalogo @relation(fields: [planOtorgado], references: [codigo])
+  membresias Membresia[]
+
+  @@map("codigos_promocionales")
+}
+
+// =============================================================================
+// 3. TAXONOMÍA Y CATÁLOGOS BASE
+// =============================================================================
+
+model RubroGrupo {
+  id               String  @id @default(uuid()) @db.Uuid
+  slug             String  @unique @db.VarChar(80)
+  nombre           String  @db.VarChar(80)
+  icono            String  @db.VarChar(60)
+  colorHex         String  @default("#2563EB") @map("color_hex") @db.VarChar(7)
+  destacadoPortada Boolean @default(false) @map("destacado_portada")
+  orden            Int     @default(0)
+  activo           Boolean @default(true)
+
+  categorias Categoria[]
+  negocios   Negocio[]
+
+  @@map("rubros_grupos")
+}
+
+model Categoria {
+  id            String           @id @default(uuid()) @db.Uuid
+  grupoId       String           @map("grupo_id") @db.Uuid
+  parentId      String?          @map("parent_id") @db.Uuid
+  slug          String           @unique @db.VarChar(100)
+  nombre        String           @db.VarChar(100)
+  tipoPermitido TipoPublicacion? @map("tipo_permitido")
+  icono         String?          @db.VarChar(60)
+  colorHex      String?          @map("color_hex") @db.VarChar(7)
+  orden         Int              @default(0)
+  activa        Boolean          @default(true)
+  creadoEn      DateTime         @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn DateTime         @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  grupo         RubroGrupo    @relation(fields: [grupoId], references: [id])
+  parent        Categoria?    @relation("Subcategorias", fields: [parentId], references: [id])
+  subcategorias Categoria[]   @relation("Subcategorias")
+  publicaciones Publicacion[]
+
+  @@index([grupoId, activa])
+  @@index([parentId])
+  @@map("categorias")
+}
+
+model MetodoPagoCatalogo {
+  id     String  @id @default(uuid()) @db.Uuid
+  codigo String  @unique @db.VarChar(40)
+  nombre String  @db.VarChar(60)
+  icono  String? @db.VarChar(60)
+  activo Boolean @default(true)
+
+  negocios NegocioMetodoPago[]
+
+  @@map("metodos_pago_catalogo")
+}
+
+// =============================================================================
+// 4. NÚCLEO COMERCIAL: NEGOCIOS / OFICIOS Y PUBLICACIONES
+// =============================================================================
+
+model Negocio {
+  id                   String              @id @default(uuid()) @db.Uuid
+  propietarioId        String              @map("propietario_id") @db.Uuid
+  tipoPerfil           TipoPerfilComercial @default(comercio) @map("tipo_perfil")
+  rubroPrincipalId     String              @map("rubro_principal_id") @db.Uuid
+  slug                 String              @unique @db.VarChar(120)
+  nombreComercial      String              @map("nombre_comercial") @db.VarChar(120)
+  eslogan              String?             @db.VarChar(160)
+  matriculaProfesional String?             @map("matricula_profesional") @db.VarChar(60)
+  descripcion          String?
+  logoUrl              String?             @map("logo_url")
+  bannerUrl            String?             @map("banner_url")
+  qrCodeToken          String              @unique @map("qr_code_token") @db.VarChar(40)
+
+  // Estado y Verificación
+  estado       EstadoNegocio      @default(activo)
+  verificacion EstadoVerificacion @default(no_solicitada)
+  verificadoEn DateTime?          @map("verificado_en") @db.Timestamptz(6)
+  badgeTexto   String?            @map("badge_texto") @db.VarChar(40)
+
+  // Plan y Entitlements Materializados
+  planActual         CodigoPlan @default(gratis) @map("plan_actual")
+  planVenceEn        DateTime?  @map("plan_vence_en") @db.Timestamptz(6)
+  prioridadPlan      Int        @default(0) @map("prioridad_plan")
+  cuposDestacadosMax Int        @default(0) @map("cupos_destacados_max")
+  maxSucursales      Int        @default(1) @map("max_sucursales")
+  entitlements       Json       @default("{}")
+
+  // Canales de Contacto Directo
+  whatsappPrincipal      String  @map("whatsapp_principal") @db.VarChar(30)
+  whatsappMensajeDefault String? @default("Hola, te vi en Mi Alberdi y quería hacerte una consulta.") @map("whatsapp_mensaje_default") @db.VarChar(250)
+  telefonoLinea          String? @map("telefono_linea") @db.VarChar(30)
+  emailContacto          String? @map("email_contacto") @db.VarChar(255)
+  instagramHandle        String? @map("instagram_handle") @db.VarChar(80)
+  facebookUrl            String? @map("facebook_url")
+  tiktokHandle           String? @map("tiktok_handle") @db.VarChar(80)
+  sitioWebUrl            String? @map("sitio_web_url")
+
+  // Operativa Comercial y de Oficios
+  modalidadPrincipal ModalidadAtencion @default(horarios_fijos) @map("modalidad_principal")
+  atiendeADomicilio  Boolean           @default(false) @map("atiende_a_domicilio")
+  haceEnvios         Boolean           @default(false) @map("hace_envios")
+  alcanceEnvios      AlcanceEnvio      @default(sin_envio) @map("alcance_envios")
+  aceptaCuotas       Boolean           @default(false) @map("acepta_cuotas")
+  politicaCambios    String?           @map("politica_cambios")
+
+  // Métricas Desnormalizadas y Ranking Justo
+  ratingPromedio        Decimal  @default(0.00) @map("rating_promedio") @db.Decimal(3, 2)
+  totalOpiniones        Int      @default(0) @map("total_opiniones")
+  porcentajeCompletitud Int      @default(50) @map("porcentaje_completitud")
+  ultimaActividadEn     DateTime @default(now()) @map("ultima_actividad_en") @db.Timestamptz(6)
+  creadoEn              DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn         DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  propietario             PerfilUsuario           @relation(fields: [propietarioId], references: [id], onDelete: Cascade)
+  rubroPrincipal          RubroGrupo              @relation(fields: [rubroPrincipalId], references: [id])
+  plan                    PlanCatalogo            @relation(fields: [planActual], references: [codigo])
+  ubicaciones             UbicacionNegocio[]
+  horarios                HorarioNegocio[]
+  metodosPago             NegocioMetodoPago[]
+  publicaciones           Publicacion[]
+  membresias              Membresia[]
+  pagosMembresia          PagoMembresia[]
+  reelsHistorias          ReelHistoria[]
+  opiniones               Opinion[]
+  eventosAnalitica        EventoAnalitica[]
+  solicitudesVerificacion SolicitudVerificacion[]
+  reportesModeracion      ReporteModeracion[]
+
+  @@index([propietarioId])
+  @@index([tipoPerfil, estado])
+  @@index([estado, prioridadPlan, ratingPromedio], map: "idx_negocios_ranking")
+  @@index([rubroPrincipalId, estado])
+  @@map("negocios")
+}
+
+model UbicacionNegocio {
+  id                     String   @id @default(uuid()) @db.Uuid
+  negocioId              String   @map("negocio_id") @db.Uuid
+  nombreSucursal         String   @default("Casa Central") @map("nombre_sucursal") @db.VarChar(80)
+  esPrincipal            Boolean  @default(true) @map("es_principal")
+  direccionEscrita       String   @map("direccion_escrita") @db.VarChar(200)
+  barrio                 String?  @db.VarChar(80)
+  referenciaVisual       String?  @map("referencia_visual") @db.VarChar(200)
+  fotoFachadaUrl         String?  @map("foto_fachada_url")
+  whatsappSucursal       String?  @map("whatsapp_sucursal") @db.VarChar(30)
+  telefonoSucursal       String?  @map("telefono_sucursal") @db.VarChar(30)
+  latitud                Decimal? @db.Decimal(9, 6)
+  longitud               Decimal? @db.Decimal(9, 6)
+  pinColorHex            String?  @default("#EF4444") @map("pin_color_hex") @db.VarChar(7)
+  pinDestacado           Boolean  @default(false) @map("pin_destacado")
+  mostrarDireccionExacta Boolean  @default(true) @map("mostrar_direccion_exacta")
+  activaPorPlan          Boolean  @default(true) @map("activa_por_plan")
+  creadoEn               DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn          DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  negocio          Negocio           @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  horarios         HorarioNegocio[]
+  eventosAnalitica EventoAnalitica[]
+
+  @@index([negocioId, esPrincipal])
+  @@index([negocioId, activaPorPlan])
+  @@index([latitud, longitud])
+  @@map("ubicaciones_negocio")
+}
+
+model HorarioNegocio {
+  id             String    @id @default(uuid()) @db.Uuid
+  negocioId      String    @map("negocio_id") @db.Uuid
+  ubicacionId    String?   @map("ubicacion_id") @db.Uuid
+  diaSemana      Int       @map("dia_semana") @db.SmallInt
+  cerrado        Boolean   @default(false)
+  horarioCorrido Boolean   @default(false) @map("horario_corrido")
+  aperturaManana DateTime? @map("apertura_manana") @db.Time(6)
+  cierreManana   DateTime? @map("cierre_manana") @db.Time(6)
+  aperturaTarde  DateTime? @map("apertura_tarde") @db.Time(6)
+  cierreTarde    DateTime? @map("cierre_tarde") @db.Time(6)
+  notaEspecial   String?   @map("nota_especial") @db.VarChar(120)
+
+  negocio   Negocio           @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  ubicacion UbicacionNegocio? @relation(fields: [ubicacionId], references: [id], onDelete: Cascade)
+
+  @@index([negocioId, ubicacionId, diaSemana])
+  @@map("horarios_negocio")
+}
+
+model NegocioMetodoPago {
+  negocioId    String  @map("negocio_id") @db.Uuid
+  metodoPagoId String  @map("metodo_pago_id") @db.Uuid
+  detalle      String? @db.VarChar(100)
+
+  negocio    Negocio            @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  metodoPago MetodoPagoCatalogo @relation(fields: [metodoPagoId], references: [id], onDelete: Cascade)
+
+  @@id([negocioId, metodoPagoId])
+  @@map("negocios_metodos_pago")
+}
+
+model Publicacion {
+  id                    String            @id @default(uuid()) @db.Uuid
+  negocioId             String            @map("negocio_id") @db.Uuid
+  categoriaId           String            @map("categoria_id") @db.Uuid
+  slug                  String            @unique @db.VarChar(140)
+  tipo                  TipoPublicacion
+  titulo                String            @db.VarChar(140)
+  descripcion           String
+  precioReferenciaArs   Decimal?          @map("precio_referencia_ars") @db.Decimal(12, 2)
+  etiquetaPrecio        String?           @map("etiqueta_precio") @db.VarChar(40)
+  modalidad             ModalidadAtencion @default(horarios_fijos)
+  whatsappEspecifico    String?           @map("whatsapp_especifico") @db.VarChar(30)
+  mensajeWhatsappCustom String?           @map("mensaje_whatsapp_custom") @db.VarChar(250)
+
+  // Sistema de Cupos de Destacados (Opción B Híbrida)
+  esDestacada    Boolean   @default(false) @map("es_destacada")
+  destacadaDesde DateTime? @map("destacada_desde") @db.Timestamptz(6)
+  ordenEnNegocio Int       @default(0) @map("orden_en_negocio")
+
+  // Estado y Moderación
+  estado             EstadoPublicacion @default(activa)
+  reportesAcumulados Int               @default(0) @map("reportes_acumulados")
+  creadoEn           DateTime          @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn      DateTime          @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  negocio            Negocio              @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  categoria          Categoria            @relation(fields: [categoriaId], references: [id])
+  imagenes           ImagenPublicacion[]
+  reelsHistorias     ReelHistoria[]
+  opiniones          Opinion[]
+  eventosAnalitica   EventoAnalitica[]
+  reportesModeracion ReporteModeracion[]
+
+  @@index([negocioId, estado])
+  @@index([categoriaId, estado, esDestacada], map: "idx_publicaciones_busqueda")
+  @@map("publicaciones")
+}
+
+model ImagenPublicacion {
+  id            String   @id @default(uuid()) @db.Uuid
+  publicacionId String   @map("publicacion_id") @db.Uuid
+  url           String
+  altText       String?  @map("alt_text") @db.VarChar(160)
+  esPortada     Boolean  @default(false) @map("es_portada")
+  orden         Int      @default(0) @db.SmallInt
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  publicacion Publicacion @relation(fields: [publicacionId], references: [id], onDelete: Cascade)
+
+  @@index([publicacionId, orden])
+  @@map("imagenes_publicacion")
+}
+
+// =============================================================================
+// 5. VISIBILIDAD, CONFIANZA Y RETENCIÓN
+// =============================================================================
+
+model ReelHistoria {
+  id                    String   @id @default(uuid()) @db.Uuid
+  negocioId             String   @map("negocio_id") @db.Uuid
+  publicacionId         String?  @map("publicacion_id") @db.Uuid
+  mediaUrl              String   @map("media_url")
+  miniaturaUrl          String?  @map("miniatura_url")
+  caption               String?  @db.VarChar(280)
+  botonAccionTexto      String?  @default("Consultar por WhatsApp") @map("boton_accion_texto") @db.VarChar(40)
+  duracionSeg           Int      @default(30) @map("duracion_seg") @db.SmallInt
+  expiraEn              DateTime @map("expira_en") @db.Timestamptz(6)
+  activo                Boolean  @default(true)
+  vistasContador        Int      @default(0) @map("vistas_contador")
+  clicsWhatsappContador Int      @default(0) @map("clics_whatsapp_contador")
+  creadoEn              DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  negocio          Negocio           @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  publicacion      Publicacion?      @relation(fields: [publicacionId], references: [id], onDelete: SetNull)
+  eventosAnalitica EventoAnalitica[]
+
+  @@index([activo, expiraEn], map: "idx_reels_vigentes")
+  @@index([negocioId])
+  @@map("reels_historias")
+}
+
+model Opinion {
+  id                   String    @id @default(uuid()) @db.Uuid
+  negocioId            String    @map("negocio_id") @db.Uuid
+  publicacionId        String?   @map("publicacion_id") @db.Uuid
+  usuarioId            String?   @map("usuario_id") @db.Uuid
+  dispositivoId        String?   @map("dispositivo_id") @db.VarChar(128)
+  nombreAutorVisible   String    @map("nombre_autor_visible") @db.VarChar(80)
+  puntuacion           Int       @db.SmallInt
+  comentario           String?
+  fotoEvidenciaUrl     String?   @map("foto_evidencia_url")
+  respuestaComerciante String?   @map("respuesta_comerciante")
+  respondidoEn         DateTime? @map("respondido_en") @db.Timestamptz(6)
+  visible              Boolean   @default(true)
+  creadoEn             DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn        DateTime  @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  negocio            Negocio             @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  publicacion        Publicacion?        @relation(fields: [publicacionId], references: [id], onDelete: SetNull)
+  usuario            PerfilUsuario?      @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  reportesModeracion ReporteModeracion[]
+
+  @@index([negocioId, visible, creadoEn])
+  @@index([negocioId, dispositivoId])
+  @@map("opiniones")
+}
+
+model EventoAnalitica {
+  id              String              @id @default(uuid()) @db.Uuid
+  negocioId       String              @map("negocio_id") @db.Uuid
+  publicacionId   String?             @map("publicacion_id") @db.Uuid
+  ubicacionId     String?             @map("ubicacion_id") @db.Uuid
+  reelId          String?             @map("reel_id") @db.Uuid
+  tipoEvento      TipoEventoAnalitica @map("tipo_evento")
+  origen          String?             @db.VarChar(40)
+  dispositivoHash String?             @map("dispositivo_hash") @db.VarChar(128)
+  creadoEn        DateTime            @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  negocio     Negocio           @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  publicacion Publicacion?      @relation(fields: [publicacionId], references: [id], onDelete: SetNull)
+  ubicacion   UbicacionNegocio? @relation(fields: [ubicacionId], references: [id], onDelete: SetNull)
+  reel        ReelHistoria?     @relation(fields: [reelId], references: [id], onDelete: SetNull)
+
+  @@index([negocioId, tipoEvento, creadoEn], map: "idx_metricas_comerciante")
+  @@index([publicacionId, tipoEvento])
+  @@map("eventos_analitica")
+}
+
+// =============================================================================
+// 6. MODERACIÓN, VERIFICACIÓN Y SISTEMA
+// =============================================================================
+
+model SolicitudVerificacion {
+  id                     String             @id @default(uuid()) @db.Uuid
+  negocioId              String             @map("negocio_id") @db.Uuid
+  solicitanteId          String             @map("solicitante_id") @db.Uuid
+  documentoFrenteUrl     String?            @map("documento_frente_url")
+  comprobanteComercioUrl String?            @map("comprobante_comercio_url")
+  notasSolicitante       String?            @map("notas_solicitante")
+  estado                 EstadoVerificacion @default(pendiente)
+  revisadoPorId          String?            @map("revisado_por") @db.Uuid
+  motivoRechazo          String?            @map("motivo_rechazo")
+  resueltoEn             DateTime?          @map("resuelto_en") @db.Timestamptz(6)
+  creadoEn               DateTime           @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn          DateTime           @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  negocio     Negocio        @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  solicitante PerfilUsuario  @relation("SolicitanteVerificacion", fields: [solicitanteId], references: [id])
+  revisadoPor PerfilUsuario? @relation("RevisorVerificacion", fields: [revisadoPorId], references: [id])
+
+  @@index([estado, creadoEn])
+  @@index([negocioId])
+  @@map("solicitudes_verificacion")
+}
+
+model ReporteModeracion {
+  id              String           @id @default(uuid()) @db.Uuid
+  negocioId       String?          @map("negocio_id") @db.Uuid
+  publicacionId   String?          @map("publicacion_id") @db.Uuid
+  opinionId       String?          @map("opinion_id") @db.Uuid
+  reportanteId    String?          @map("reportante_id") @db.Uuid
+  dispositivoHash String?          @map("dispositivo_hash") @db.VarChar(128)
+  motivo          String           @db.VarChar(80)
+  detalle         String?
+  estado          EstadoModeracion @default(pendiente)
+  revisadoPorId   String?          @map("revisado_por") @db.Uuid
+  resolucionNota  String?          @map("resolucion_nota")
+  creadoEn        DateTime         @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn   DateTime         @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  negocio     Negocio?       @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  publicacion Publicacion?   @relation(fields: [publicacionId], references: [id], onDelete: Cascade)
+  opinion     Opinion?       @relation(fields: [opinionId], references: [id], onDelete: Cascade)
+  reportante  PerfilUsuario? @relation("ReportanteModeracion", fields: [reportanteId], references: [id])
+  revisadoPor PerfilUsuario? @relation("RevisorModeracion", fields: [revisadoPorId], references: [id])
+
+  @@index([estado, creadoEn])
+  @@map("reportes_moderacion")
+}
+
+model FeedbackPlataforma {
+  id             String   @id @default(uuid()) @db.Uuid
+  usuarioId      String?  @map("usuario_id") @db.Uuid
+  nombreCompleto String?  @map("nombre_completo") @db.VarChar(120)
+  email          String?  @db.VarChar(255)
+  mensaje        String
+  ipAddress      String?  @map("ip_address") @db.VarChar(64)
+  userAgent      String?  @map("user_agent")
+  notasAdmin     String?  @map("notas_admin")
+  leido          Boolean  @default(false)
+  creadoEn       DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  usuario PerfilUsuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@map("feedback_plataforma")
+}
+
+model ConfiguracionSistema {
+  id                            Int      @id @default(1) @db.SmallInt
+  modoMantenimiento             Boolean  @default(false) @map("modo_mantenimiento")
+  mensajeMantenimiento          String?  @map("mensaje_mantenimiento")
+  usuariosExcluidosMantenimiento String[] @default([]) @map("usuarios_excluidos_mantenimiento") @db.Uuid
+  semillaRotacionRanking        Int      @default(1) @map("semilla_rotacion_ranking")
+  versionMinimaPwa              String?  @map("version_minima_pwa") @db.VarChar(20)
+  actualizadoEn                 DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  @@map("configuracion_sistema")
+}
+

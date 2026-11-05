@@ -1,0 +1,22 @@
+{
+  "extends": "@mi-alberdi/config/tsconfig.node.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@core/*": ["src/core/*"],
+      "@features/*": ["src/features/*"],
+      "@domain/*": ["src/core/domain/*"],
+      "@application/*": ["src/core/application/*"],
+      "@infrastructure/*": ["src/core/infrastructure/*"],
+      "@presentation/*": ["src/core/presentation/*"],
+      "@config/*": ["src/config/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}
+

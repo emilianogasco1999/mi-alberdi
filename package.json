@@ -1,0 +1,28 @@
+{
+  "name": "mi-alberdi-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plataforma de descubrimiento comercial, oficios y servicios para Juan Bautista Alberdi",
+  "scripts": {
+    "dev": "docker compose -f .docker/dev/docker-compose.dev.yml up --build",
+    "dev:db": "docker compose -f .docker/dev/docker-compose.dev.yml up -d",
+    "dev:api": "pnpm --filter \"@mi-alberdi/api\" dev",
+    "dev:web": "pnpm --filter \"@mi-alberdi/web\" dev",
+    "dev:local": "pnpm --filter \"./apps/*\" --parallel dev",
+    "dev:backup": "docker compose -f .docker/dev/docker-compose.dev.yml run --rm backup",
+    "dev:down": "docker compose -f .docker/dev/docker-compose.dev.yml down",
+    "prod:up": "docker compose --env-file .env -f .docker/prod/docker-compose.prod.yml up -d --build",
+    "prod:down": "docker compose --env-file .env -f .docker/prod/docker-compose.prod.yml down",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
+

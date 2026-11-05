@@ -1,0 +1,84 @@
+name: mi-alberdi
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mi_alberdi_postgres_dev
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mialberdi_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mialberdi_password_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-mi_alberdi_db}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER:-mialberdi_user} -d ${POSTGRES_DB:-mi_alberdi_db}',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:8.14
+    container_name: mi_alberdi_pgadmin_dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@mialberdi.com.ar}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+    ports:
+      - '${PGADMIN_PORT:-5050}:80'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  minio:
+    image: alpine/minio:latest-release
+    container_name: mi_alberdi_minio_dev
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mialberdi_minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mialberdi_minio_secret}
+    ports:
+      - '${MINIO_PORT:-9000}:9000' # Puerto S3 API (lo usa el backend)
+      - '${MINIO_CONSOLE_PORT:-9001}:9001' # Consola Web (para vos)
+    volumes:
+      - minio_dev_data:/data
+
+  backup:
+    container_name: mi_alberdi_backup_dev
+    restart: unless-stopped
+    build:
+      context: ../backup
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-mialberdi_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mialberdi_password_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-mi_alberdi_db}
+      MINIO_HOST: minio
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mialberdi_minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mialberdi_minio_secret}
+      # Cron diario a las 03:00 AM (configurable)
+      BACKUP_CRON: ${BACKUP_CRON:-0 3 * * *}
+      # Si querés que haga un backup al arrancar el contenedor
+      BACKUP_ON_STARTUP: ${BACKUP_ON_STARTUP:-false}
+    volumes:
+      # Guarda el backup en la carpeta /backups del proyecto para inspección local
+      - ../../backups:/backups
+      # Montaje de solo lectura de los datos de MinIO
+      - minio_dev_data:/minio_data:ro
+      # Montaje opcional de la configuración de Google Drive
+      - ../backup/rclone.conf:/root/.config/rclone/rclone.conf:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+volumes:
+  postgres_dev_data:
+    name: mi-alberdi_postgres_dev_data
+  minio_dev_data:

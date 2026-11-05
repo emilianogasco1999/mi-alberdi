@@ -1,0 +1,108 @@
+export const CODIGOS_PLAN = {
+  GRATIS: 'gratis',
+  PLATA: 'plata',
+  ORO: 'oro',
+} as const;
+
+export const CODIGOS_PLAN_VALUES = [
+  CODIGOS_PLAN.GRATIS,
+  CODIGOS_PLAN.PLATA,
+  CODIGOS_PLAN.ORO,
+] as const;
+
+export type CodigoPlan = (typeof CODIGOS_PLAN)[keyof typeof CODIGOS_PLAN];
+
+export const LIMITES_PLAN_DEFAULT = {
+  [CODIGOS_PLAN.GRATIS]: {
+    precioMensualArs: 0,
+    maxPublicaciones: 2,
+    maxFotosPorPublicacion: 3,
+    cuposDestacados: 0,
+    maxSucursales: 1,
+    maxReelsActivos: 0,
+    prioridadBase: 0,
+  },
+  [CODIGOS_PLAN.PLATA]: {
+    precioMensualArs: 1500,
+    maxPublicaciones: 10,
+    maxFotosPorPublicacion: 6,
+    cuposDestacados: 1,
+    maxSucursales: 3,
+    maxReelsActivos: 1,
+    prioridadBase: 10,
+  },
+  [CODIGOS_PLAN.ORO]: {
+    precioMensualArs: 2500,
+    maxPublicaciones: 999,
+    maxFotosPorPublicacion: 10,
+    cuposDestacados: 3,
+    maxSucursales: 10,
+    maxReelsActivos: 3,
+    prioridadBase: 20,
+  },
+} as const;
+
+export const TIPOS_PERFIL_COMERCIAL = {
+  COMERCIO: 'comercio',
+  OFICIO: 'oficio',
+  PROFESIONAL: 'profesional',
+  EMPRENDIMIENTO: 'emprendimiento',
+} as const;
+
+export const TIPOS_PERFIL_COMERCIAL_VALUES = [
+  TIPOS_PERFIL_COMERCIAL.COMERCIO,
+  TIPOS_PERFIL_COMERCIAL.OFICIO,
+  TIPOS_PERFIL_COMERCIAL.PROFESIONAL,
+  TIPOS_PERFIL_COMERCIAL.EMPRENDIMIENTO,
+] as const;
+
+export type TipoPerfilComercial =
+  (typeof TIPOS_PERFIL_COMERCIAL)[keyof typeof TIPOS_PERFIL_COMERCIAL];
+
+export const TIPOS_PUBLICACION = {
+  SERVICIO: 'servicio',
+  PRODUCTO: 'producto',
+} as const;
+
+export const TIPOS_PUBLICACION_VALUES = [
+  TIPOS_PUBLICACION.SERVICIO,
+  TIPOS_PUBLICACION.PRODUCTO,
+] as const;
+
+export type TipoPublicacion = (typeof TIPOS_PUBLICACION)[keyof typeof TIPOS_PUBLICACION];
+
+export const MODALIDADES_ATENCION = {
+  HORARIOS_FIJOS: 'horarios_fijos',
+  POR_TURNOS: 'por_turnos',
+  POR_PEDIDO: 'por_pedido',
+  ATENCION_24HS: 'atencion_24hs',
+  SOLO_WHATSAPP: 'solo_whatsapp',
+} as const;
+
+export const MODALIDADES_ATENCION_VALUES = [
+  MODALIDADES_ATENCION.HORARIOS_FIJOS,
+  MODALIDADES_ATENCION.POR_TURNOS,
+  MODALIDADES_ATENCION.POR_PEDIDO,
+  MODALIDADES_ATENCION.ATENCION_24HS,
+  MODALIDADES_ATENCION.SOLO_WHATSAPP,
+] as const;
+
+export type ModalidadAtencion =
+  (typeof MODALIDADES_ATENCION)[keyof typeof MODALIDADES_ATENCION];
+
+export const ALCANCES_ENVIO = {
+  SIN_ENVIO: 'sin_envio',
+  SOLO_ALBERDI: 'solo_alberdi',
+  ALBERDI_Y_ALREDEDORES: 'alberdi_y_alrededores',
+  TODO_EL_PAIS: 'todo_el_pais',
+} as const;
+
+export const ALCANCES_ENVIO_VALUES = [
+  ALCANCES_ENVIO.SIN_ENVIO,
+  ALCANCES_ENVIO.SOLO_ALBERDI,
+  ALCANCES_ENVIO.ALBERDI_Y_ALREDEDORES,
+  ALCANCES_ENVIO.TODO_EL_PAIS,
+] as const;
+
+export type AlcanceEnvio = (typeof ALCANCES_ENVIO)[keyof typeof ALCANCES_ENVIO];
+

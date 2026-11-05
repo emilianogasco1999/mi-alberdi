@@ -1,0 +1,28 @@
+import type { RolUsuario } from '../constants/roles.js';
+
+export interface AuthUserDTO {
+  id: string;
+  nombre: string;
+  apellido: string | null;
+  email: string;
+  telefono: string | null;
+  avatarUrl: string | null;
+  rol: RolUsuario;
+  puedeProbarPremium: boolean;
+}
+
+export interface ApiSuccessResponse<T> {
+  ok: true;
+  data: T;
+  message?: string;
+}
+
+export interface ApiErrorResponse {
+  ok: false;
+  error: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+}
+
