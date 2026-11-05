@@ -35,7 +35,7 @@ services:
         condition: service_healthy
 
   minio:
-    image: quay.io/minio/minio:latest
+    image: alpine/minio:latest-release
     container_name: mi_alberdi_minio_dev
     command: server /data --console-address ":9001"
     environment:
