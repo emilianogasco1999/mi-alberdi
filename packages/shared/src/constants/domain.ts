@@ -106,3 +106,51 @@ export const ALCANCES_ENVIO_VALUES = [
 
 export type AlcanceEnvio = (typeof ALCANCES_ENVIO)[keyof typeof ALCANCES_ENVIO];
 
+export const ESTADOS_NEGOCIO = {
+  BORRADOR: 'borrador',
+  ACTIVO: 'activo',
+  PAUSADO: 'pausado',
+  SUSPENDIDO: 'suspendido',
+} as const;
+
+export const ESTADOS_NEGOCIO_VALUES = [
+  ESTADOS_NEGOCIO.BORRADOR,
+  ESTADOS_NEGOCIO.ACTIVO,
+  ESTADOS_NEGOCIO.PAUSADO,
+  ESTADOS_NEGOCIO.SUSPENDIDO,
+] as const;
+
+export type EstadoNegocio = (typeof ESTADOS_NEGOCIO)[keyof typeof ESTADOS_NEGOCIO];
+
+export const ESTADOS_VERIFICACION = {
+  NO_SOLICITADA: 'no_solicitada',
+  PENDIENTE: 'pendiente',
+  APROBADA: 'aprobada',
+  RECHAZADA: 'rechazada',
+} as const;
+
+export const ESTADOS_VERIFICACION_VALUES = [
+  ESTADOS_VERIFICACION.NO_SOLICITADA,
+  ESTADOS_VERIFICACION.PENDIENTE,
+  ESTADOS_VERIFICACION.APROBADA,
+  ESTADOS_VERIFICACION.RECHAZADA,
+] as const;
+
+export type EstadoVerificacion =
+  (typeof ESTADOS_VERIFICACION)[keyof typeof ESTADOS_VERIFICACION];
+
+export const DIAS_SEMANA = {
+  DOMINGO: 0,
+  LUNES: 1,
+  MARTES: 2,
+  MIERCOLES: 3,
+  JUEVES: 4,
+  VIERNES: 5,
+  SABADO: 6,
+} as const;
+
+export const DIAS_SEMANA_VALUES = [0, 1, 2, 3, 4, 5, 6] as const;
+
+export type DiaSemana = (typeof DIAS_SEMANA_VALUES)[number];
+
+

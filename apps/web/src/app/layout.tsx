@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AppProviders } from '@/core/providers/AppProviders';
+import { Navbar } from '@/components/Navbar';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,8 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
-        <AppProviders>{children}</AppProviders>
+      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased flex flex-col">
+        <AppProviders>
+          <Navbar />
+          <div className="flex-1">{children}</div>
+        </AppProviders>
       </body>
     </html>
   );

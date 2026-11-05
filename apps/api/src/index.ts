@@ -9,6 +9,11 @@ import { auditContextMiddleware } from '@core/presentation/middlewares/auditCont
 import { generalRateLimiter } from '@core/presentation/middlewares/rateLimiter.middleware.js';
 import { errorHandler } from '@core/presentation/middlewares/errorHandler.middleware.js';
 import { AuthRoutes } from '@features/auth/presentation/routes/auth.routes.js';
+import { TaxonomiaRoutes } from '@features/taxonomia/presentation/routes/taxonomia.routes.js';
+import { StorageRoutes } from '@features/storage/presentation/routes/storage.routes.js';
+import { NegociosRoutes } from '@features/negocios/presentation/routes/negocios.routes.js';
+
+
 
 const app = express();
 
@@ -58,6 +63,11 @@ app.get('/api/health', (_req, res) => {
 
 // Rutas de Módulos (Features)
 app.use('/api/auth', AuthRoutes());
+app.use('/api/taxonomia', TaxonomiaRoutes());
+app.use('/api/storage', StorageRoutes());
+app.use('/api/negocios', NegociosRoutes());
+
+
 
 // Manejador centralizado de errores
 app.use(errorHandler);
