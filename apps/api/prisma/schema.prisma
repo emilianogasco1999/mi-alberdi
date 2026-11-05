@@ -394,12 +394,13 @@ model Negocio {
   politicaCambios    String?           @map("politica_cambios")
 
   // Métricas Desnormalizadas y Ranking Justo
-  ratingPromedio        Decimal  @default(0.00) @map("rating_promedio") @db.Decimal(3, 2)
-  totalOpiniones        Int      @default(0) @map("total_opiniones")
-  porcentajeCompletitud Int      @default(50) @map("porcentaje_completitud")
-  ultimaActividadEn     DateTime @default(now()) @map("ultima_actividad_en") @db.Timestamptz(6)
-  creadoEn              DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
-  actualizadoEn         DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+  ratingPromedio        Decimal                  @default(0.00) @map("rating_promedio") @db.Decimal(3, 2)
+  totalOpiniones        Int                      @default(0) @map("total_opiniones")
+  porcentajeCompletitud Int                      @default(50) @map("porcentaje_completitud")
+  ultimaActividadEn     DateTime                 @default(now()) @map("ultima_actividad_en") @db.Timestamptz(6)
+  searchVector          Unsupported("tsvector")? @map("search_vector")
+  creadoEn              DateTime                 @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn         DateTime                 @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   propietario             PerfilUsuario           @relation(fields: [propietarioId], references: [id], onDelete: Cascade)
   rubroPrincipal          RubroGrupo              @relation(fields: [rubroPrincipalId], references: [id])
@@ -505,9 +506,10 @@ model Publicacion {
   ordenEnNegocio Int       @default(0) @map("orden_en_negocio")
 
   // Estado y Moderación
-  estado             EstadoPublicacion @default(activa)
-  reportesAcumulados Int               @default(0) @map("reportes_acumulados")
-  creadoEn           DateTime          @default(now()) @map("creado_en") @db.Timestamptz(6)
+  estado             EstadoPublicacion        @default(activa)
+  reportesAcumulados Int                      @default(0) @map("reportes_acumulados")
+  searchVector       Unsupported("tsvector")? @map("search_vector")
+  creadoEn           DateTime                 @default(now()) @map("creado_en") @db.Timestamptz(6)
   actualizadoEn      DateTime          @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   negocio            Negocio              @relation(fields: [negocioId], references: [id], onDelete: Cascade)
