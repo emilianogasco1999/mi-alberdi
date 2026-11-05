@@ -26,3 +26,7 @@ export interface ApiErrorResponse {
   };
 }
 
+export * from './taxonomia.types.js';
+export * from './negocio.types.js';
+
+
