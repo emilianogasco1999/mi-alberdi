@@ -1,0 +1,15 @@
+import type {
+  RubroGrupo,
+  MetodoPagoCatalogo,
+  RubroGrupoArbolDTO,
+  CategoriaNodoDTO,
+} from '@mi-alberdi/shared';
+
+export interface ITaxonomiaRepository {
+  getArbolTaxonomia(): Promise<RubroGrupoArbolDTO[]>;
+  getRubros(): Promise<RubroGrupo[]>;
+  getRubroBySlug(slug: string): Promise<RubroGrupo | null>;
+  getCategoriasByRubro(rubroIdOrSlug: string): Promise<CategoriaNodoDTO[]>;
+  getMetodosPago(): Promise<MetodoPagoCatalogo[]>;
+}
+
