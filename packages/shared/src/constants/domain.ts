@@ -87,8 +87,7 @@ export const MODALIDADES_ATENCION_VALUES = [
   MODALIDADES_ATENCION.SOLO_WHATSAPP,
 ] as const;
 
-export type ModalidadAtencion =
-  (typeof MODALIDADES_ATENCION)[keyof typeof MODALIDADES_ATENCION];
+export type ModalidadAtencion = (typeof MODALIDADES_ATENCION)[keyof typeof MODALIDADES_ATENCION];
 
 export const ALCANCES_ENVIO = {
   SIN_ENVIO: 'sin_envio',
@@ -136,8 +135,7 @@ export const ESTADOS_VERIFICACION_VALUES = [
   ESTADOS_VERIFICACION.RECHAZADA,
 ] as const;
 
-export type EstadoVerificacion =
-  (typeof ESTADOS_VERIFICACION)[keyof typeof ESTADOS_VERIFICACION];
+export type EstadoVerificacion = (typeof ESTADOS_VERIFICACION)[keyof typeof ESTADOS_VERIFICACION];
 
 export const DIAS_SEMANA = {
   DOMINGO: 0,
@@ -153,4 +151,69 @@ export const DIAS_SEMANA_VALUES = [0, 1, 2, 3, 4, 5, 6] as const;
 
 export type DiaSemana = (typeof DIAS_SEMANA_VALUES)[number];
 
+export const ESTADOS_PUBLICACION = {
+  BORRADOR: 'borrador',
+  ACTIVA: 'activa',
+  PAUSADA: 'pausada',
+  PAUSADA_POR_PLAN: 'pausada_por_plan',
+  OCULTA_POR_REPORTES: 'oculta_por_reportes',
+  SUSPENDIDA: 'suspendida',
+} as const;
+
+export const ESTADOS_PUBLICACION_VALUES = [
+  ESTADOS_PUBLICACION.BORRADOR,
+  ESTADOS_PUBLICACION.ACTIVA,
+  ESTADOS_PUBLICACION.PAUSADA,
+  ESTADOS_PUBLICACION.PAUSADA_POR_PLAN,
+  ESTADOS_PUBLICACION.OCULTA_POR_REPORTES,
+  ESTADOS_PUBLICACION.SUSPENDIDA,
+] as const;
+
+export type EstadoPublicacion = (typeof ESTADOS_PUBLICACION)[keyof typeof ESTADOS_PUBLICACION];
+
+export const ESTADOS_MEMBRESIA = {
+  ACTIVA: 'activa',
+  EN_PRUEBA: 'en_prueba',
+  VENCIDA: 'vencida',
+  CANCELADA: 'cancelada',
+} as const;
+
+export const ESTADOS_MEMBRESIA_VALUES = [
+  ESTADOS_MEMBRESIA.ACTIVA,
+  ESTADOS_MEMBRESIA.EN_PRUEBA,
+  ESTADOS_MEMBRESIA.VENCIDA,
+  ESTADOS_MEMBRESIA.CANCELADA,
+] as const;
+
+export type EstadoMembresia = (typeof ESTADOS_MEMBRESIA)[keyof typeof ESTADOS_MEMBRESIA];
+
+export const ESTADOS_PAGO = {
+  PENDIENTE: 'pendiente',
+  APROBADO: 'aprobado',
+  RECHAZADO: 'rechazado',
+  REEMBOLSADO: 'reembolsado',
+} as const;
+
+export const ESTADOS_PAGO_VALUES = [
+  ESTADOS_PAGO.PENDIENTE,
+  ESTADOS_PAGO.APROBADO,
+  ESTADOS_PAGO.RECHAZADO,
+  ESTADOS_PAGO.REEMBOLSADO,
+] as const;
+
+export type EstadoPago = (typeof ESTADOS_PAGO)[keyof typeof ESTADOS_PAGO];
+
+export const PASARELAS_PAGO = {
+  MERCADOPAGO: 'mercadopago',
+  TRANSFERENCIA_MANUAL: 'transferencia_manual',
+  PROMO: 'promo',
+} as const;
+
+export const PASARELAS_PAGO_VALUES = [
+  PASARELAS_PAGO.MERCADOPAGO,
+  PASARELAS_PAGO.TRANSFERENCIA_MANUAL,
+  PASARELAS_PAGO.PROMO,
+] as const;
+
+export type PasarelaPago = (typeof PASARELAS_PAGO)[keyof typeof PASARELAS_PAGO];
 

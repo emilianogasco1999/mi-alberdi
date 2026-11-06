@@ -1,4 +1,9 @@
-import type { RubroGrupo, Categoria, MetodoPagoCatalogo } from '../schemas/taxonomia.schema.js';
+import type {
+  RubroGrupo,
+  Categoria,
+  MetodoPagoCatalogo,
+  PlanCatalogo,
+} from '../schemas/taxonomia.schema.js';
 
 export interface CategoriaNodoDTO extends Categoria {
   subcategorias?: CategoriaNodoDTO[];
@@ -14,5 +19,4 @@ export interface RubroGrupoArbolDTO extends RubroGrupo {
   };
 }
 
-export type { RubroGrupo, Categoria, MetodoPagoCatalogo };
-
+export type { RubroGrupo, Categoria, MetodoPagoCatalogo, PlanCatalogo };
