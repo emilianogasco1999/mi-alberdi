@@ -8,3 +8,4 @@ export const descubrimientoMessages = {
     message: 'Destacados de portada obtenidos exitosamente',
   },
 } as const;
+

@@ -69,3 +69,4 @@ export interface DestacadosPortadaDTO {
   publicacionesDestacadas: ItemBusquedaPublicacionDTO[];
   negociosDestacados: ItemBusquedaNegocioDTO[];
 }
+

@@ -16,8 +16,7 @@
  *         name: q
  *         schema:
  *           type: string
- *         description: Término de búsqueda (búsqueda difusa y Full-Text con unaccent y pg_trgm)
- *         example: "pizza"
+ *         description: Término de búsqueda opcional (búsqueda difusa y Full-Text con unaccent y pg_trgm)
  *       - in: query
  *         name: rubroId
  *         schema:
@@ -28,8 +27,7 @@
  *         name: rubroSlug
  *         schema:
  *           type: string
- *         description: Filtrar por slug del rubro (ej. gastronomia)
- *         example: "gastronomia"
+ *         description: Filtrar por slug del rubro (ej. gastronomia, salud-y-bienestar)
  *       - in: query
  *         name: categoriaId
  *         schema:
@@ -40,8 +38,7 @@
  *         name: categoriaSlug
  *         schema:
  *           type: string
- *         description: Filtrar por slug de la categoría
- *         example: "pizzerias-y-sandwicherias"
+ *         description: Filtrar por slug de la categoría (ej. rotiserias-y-viandas)
  *       - in: query
  *         name: tipoPerfil
  *         schema:
@@ -152,3 +149,4 @@
  *                       items:
  *                         type: object
  */
+

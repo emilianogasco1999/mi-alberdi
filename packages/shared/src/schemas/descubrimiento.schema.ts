@@ -20,3 +20,4 @@ export const buscarDescubrimientoSchema = z.object({
 });
 
 export type BuscarDescubrimientoInput = z.infer<typeof buscarDescubrimientoSchema>;
+

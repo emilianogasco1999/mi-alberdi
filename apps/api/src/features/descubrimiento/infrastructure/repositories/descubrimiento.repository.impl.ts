@@ -140,7 +140,9 @@ export class DescubrimientoRepositoryImpl implements IDescubrimientoRepository {
       `;
 
       const totalNegocios = Number(countRes[0]?.count ?? 0);
-      if (tipo === 'negocios') totalItems = totalNegocios;
+      if (tipo === 'negocios' || tipo === 'todos') {
+        totalItems += totalNegocios;
+      }
 
       if (rawNegocios.length > 0) {
         const ids = rawNegocios.map((r) => r.id);
@@ -485,3 +487,4 @@ export class DescubrimientoRepositoryImpl implements IDescubrimientoRepository {
     };
   }
 }
+

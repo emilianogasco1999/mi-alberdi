@@ -11,3 +11,4 @@ export const DescubrimientoRoutes = (): Router => {
 
   return router;
 };
+

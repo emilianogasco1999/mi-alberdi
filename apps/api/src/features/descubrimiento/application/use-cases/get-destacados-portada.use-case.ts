@@ -8,3 +8,4 @@ export class GetDestacadosPortadaUseCase {
     return this.repository.getDestacadosPortada();
   }
 }
+

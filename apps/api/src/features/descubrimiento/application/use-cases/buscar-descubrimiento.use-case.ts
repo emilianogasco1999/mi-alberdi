@@ -8,3 +8,4 @@ export class BuscarDescubrimientoUseCase {
     return this.repository.buscar(input);
   }
 }
+

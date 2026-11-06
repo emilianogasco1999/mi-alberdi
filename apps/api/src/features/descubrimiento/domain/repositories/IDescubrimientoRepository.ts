@@ -9,3 +9,4 @@ export interface IDescubrimientoRepository {
   getDestacadosPortada(): Promise<DestacadosPortadaDTO>;
   getSemillaRotacion(): Promise<number>;
 }
+
