@@ -6,7 +6,7 @@ export class RevisarPagoManualUseCase {
   constructor(private readonly repository: IMembresiasRepository) {}
 
   async execute(rol: string, input: RevisarPagoManualInput): Promise<PagoMembresiaDTO> {
-    const esAdmin = rol === 'administrador' || rol === 'moderador';
+    const esAdmin = rol === 'admin' || rol === 'administrador' || rol === 'moderador';
     if (!esAdmin) {
       throw ForbiddenError('Solo los administradores pueden revisar y aprobar pagos manuales');
     }
@@ -18,3 +18,4 @@ export class RevisarPagoManualUseCase {
     });
   }
 }
+

@@ -105,3 +105,4 @@ export interface EstadoMembresiaNegocioDTO {
   entitlements: Record<string, unknown>;
   membresiaActiva: MembresiaDTO | null;
 }
+

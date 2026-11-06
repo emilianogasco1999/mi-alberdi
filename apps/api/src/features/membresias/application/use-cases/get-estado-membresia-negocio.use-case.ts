@@ -15,7 +15,7 @@ export class GetEstadoMembresiaNegocioUseCase {
       throw NotFoundError('Negocio no encontrado');
     }
 
-    const esAdmin = rol === 'administrador' || rol === 'moderador';
+    const esAdmin = rol === 'admin' || rol === 'administrador' || rol === 'moderador';
     if (ownerId !== usuarioId && !esAdmin) {
       throw ForbiddenError('No tienes permisos para ver el estado de membresía de este negocio');
     }
@@ -28,3 +28,4 @@ export class GetEstadoMembresiaNegocioUseCase {
     return estado;
   }
 }
+

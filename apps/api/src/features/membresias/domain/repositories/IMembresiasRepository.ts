@@ -57,5 +57,21 @@ export interface IMembresiasRepository {
     motivoRechazo?: string;
   }): Promise<PagoMembresiaDTO>;
 
+  getPagosByNegocio(params: {
+    negocioId: string;
+    page: number;
+    limit: number;
+  }): Promise<{ pagos: PagoMembresiaDTO[]; total: number; page: number; totalPages: number }>;
+
+  getPagosAdmin(params: {
+    negocioId?: string;
+    estado?: string;
+    pasarela?: string;
+    page: number;
+    limit: number;
+  }): Promise<{ pagos: PagoMembresiaDTO[]; total: number; page: number; totalPages: number }>;
+
   ejecutarVencimientoMembresias(): Promise<{ membresiasVencidas: number }>;
+
 }
+

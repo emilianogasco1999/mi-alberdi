@@ -578,6 +578,114 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
     });
   }
 
+  async getPagosByNegocio(params: {
+    negocioId: string;
+    page: number;
+    limit: number;
+  }): Promise<{ pagos: PagoMembresiaDTO[]; total: number; page: number; totalPages: number }> {
+    const page = Number(params.page) || 1;
+    const limit = Number(params.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [pagos, total] = await Promise.all([
+      prisma.pagoMembresia.findMany({
+        where: { negocioId: params.negocioId },
+        orderBy: { creadoEn: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          negocio: { select: { nombreComercial: true } },
+          usuario: { select: { nombre: true, apellido: true } },
+        },
+      }),
+      prisma.pagoMembresia.count({
+        where: { negocioId: params.negocioId },
+      }),
+    ]);
+
+    const dtos: PagoMembresiaDTO[] = pagos.map((p) => ({
+      id: p.id,
+      membresiaId: p.membresiaId,
+      negocioId: p.negocioId,
+      usuarioId: p.usuarioId,
+      montoArs: Number(p.montoArs),
+      pasarela: p.pasarela,
+      referenciaExterna: p.referenciaExterna,
+      estado: p.estado as any,
+      comprobanteUrl: p.comprobanteUrl,
+      metadataPasarela: (p.metadataPasarela as Record<string, unknown>) ?? null,
+      pagadoEn: p.pagadoEn ? p.pagadoEn.toISOString() : null,
+      creadoEn: p.creadoEn.toISOString(),
+      actualizadoEn: p.actualizadoEn.toISOString(),
+      negocioNombre: p.negocio.nombreComercial,
+      usuarioNombre: `${p.usuario.nombre} ${p.usuario.apellido ?? ''}`.trim(),
+    }));
+
+    return {
+      pagos: dtos,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+  async getPagosAdmin(params: {
+    negocioId?: string;
+    estado?: string;
+    pasarela?: string;
+    page: number;
+    limit: number;
+  }): Promise<{ pagos: PagoMembresiaDTO[]; total: number; page: number; totalPages: number }> {
+    const page = Number(params.page) || 1;
+    const limit = Number(params.limit) || 10;
+    const skip = (page - 1) * limit;
+    const where: any = {};
+
+    if (params.negocioId) where.negocioId = params.negocioId;
+    if (params.estado) where.estado = params.estado;
+    if (params.pasarela) where.pasarela = params.pasarela;
+
+    const [pagos, total] = await Promise.all([
+      prisma.pagoMembresia.findMany({
+        where,
+        orderBy: { creadoEn: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          negocio: { select: { nombreComercial: true } },
+          usuario: { select: { nombre: true, apellido: true } },
+        },
+      }),
+      prisma.pagoMembresia.count({ where }),
+    ]);
+
+    const dtos: PagoMembresiaDTO[] = pagos.map((p) => ({
+      id: p.id,
+      membresiaId: p.membresiaId,
+      negocioId: p.negocioId,
+      usuarioId: p.usuarioId,
+      montoArs: Number(p.montoArs),
+      pasarela: p.pasarela,
+      referenciaExterna: p.referenciaExterna,
+      estado: p.estado as any,
+      comprobanteUrl: p.comprobanteUrl,
+      metadataPasarela: (p.metadataPasarela as Record<string, unknown>) ?? null,
+      pagadoEn: p.pagadoEn ? p.pagadoEn.toISOString() : null,
+      creadoEn: p.creadoEn.toISOString(),
+      actualizadoEn: p.actualizadoEn.toISOString(),
+      negocioNombre: p.negocio.nombreComercial,
+      usuarioNombre: `${p.usuario.nombre} ${p.usuario.apellido ?? ''}`.trim(),
+    }));
+
+    return {
+      pagos: dtos,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+
   async ejecutarVencimientoMembresias(): Promise<{ membresiasVencidas: number }> {
     const ahora = new Date();
 
@@ -633,3 +741,4 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
     return { membresiasVencidas: vencidas.length };
   }
 }
+

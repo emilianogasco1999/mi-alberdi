@@ -8,3 +8,4 @@ export class GetPlanesCatalogoUseCase {
     return this.repository.getPlanesCatalogo();
   }
 }
+
