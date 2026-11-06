@@ -87,8 +87,7 @@ export const MODALIDADES_ATENCION_VALUES = [
   MODALIDADES_ATENCION.SOLO_WHATSAPP,
 ] as const;
 
-export type ModalidadAtencion =
-  (typeof MODALIDADES_ATENCION)[keyof typeof MODALIDADES_ATENCION];
+export type ModalidadAtencion = (typeof MODALIDADES_ATENCION)[keyof typeof MODALIDADES_ATENCION];
 
 export const ALCANCES_ENVIO = {
   SIN_ENVIO: 'sin_envio',
@@ -136,8 +135,7 @@ export const ESTADOS_VERIFICACION_VALUES = [
   ESTADOS_VERIFICACION.RECHAZADA,
 ] as const;
 
-export type EstadoVerificacion =
-  (typeof ESTADOS_VERIFICACION)[keyof typeof ESTADOS_VERIFICACION];
+export type EstadoVerificacion = (typeof ESTADOS_VERIFICACION)[keyof typeof ESTADOS_VERIFICACION];
 
 export const DIAS_SEMANA = {
   DOMINGO: 0,
@@ -153,4 +151,22 @@ export const DIAS_SEMANA_VALUES = [0, 1, 2, 3, 4, 5, 6] as const;
 
 export type DiaSemana = (typeof DIAS_SEMANA_VALUES)[number];
 
+export const ESTADOS_PUBLICACION = {
+  BORRADOR: 'borrador',
+  ACTIVA: 'activa',
+  PAUSADA: 'pausada',
+  PAUSADA_POR_PLAN: 'pausada_por_plan',
+  OCULTA_POR_REPORTES: 'oculta_por_reportes',
+  SUSPENDIDA: 'suspendida',
+} as const;
 
+export const ESTADOS_PUBLICACION_VALUES = [
+  ESTADOS_PUBLICACION.BORRADOR,
+  ESTADOS_PUBLICACION.ACTIVA,
+  ESTADOS_PUBLICACION.PAUSADA,
+  ESTADOS_PUBLICACION.PAUSADA_POR_PLAN,
+  ESTADOS_PUBLICACION.OCULTA_POR_REPORTES,
+  ESTADOS_PUBLICACION.SUSPENDIDA,
+] as const;
+
+export type EstadoPublicacion = (typeof ESTADOS_PUBLICACION)[keyof typeof ESTADOS_PUBLICACION];
