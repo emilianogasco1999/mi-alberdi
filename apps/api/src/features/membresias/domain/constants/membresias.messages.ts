@@ -31,4 +31,10 @@ export const membresiasMessages = {
     statusCode: 200,
     message: 'Proceso de vencimiento de membresías ejecutado exitosamente',
   },
+  getPagosSuccess: {
+    statusCode: 200,
+    message: 'Historial de pagos obtenido exitosamente',
+  },
 } as const;
+
+

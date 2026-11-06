@@ -15,7 +15,7 @@ export class RegistrarPagoTransferenciaUseCase {
       throw NotFoundError('Negocio no encontrado');
     }
 
-    const esAdmin = rol === 'administrador' || rol === 'moderador';
+    const esAdmin = rol === 'admin' || rol === 'administrador' || rol === 'moderador';
     if (ownerId !== usuarioId && !esAdmin) {
       throw ForbiddenError('No tienes permisos para registrar pagos en este negocio');
     }
@@ -30,3 +30,4 @@ export class RegistrarPagoTransferenciaUseCase {
     });
   }
 }
+

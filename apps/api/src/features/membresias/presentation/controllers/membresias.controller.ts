@@ -10,6 +10,9 @@ import { CanjearCodigoPromoUseCase } from '../../application/use-cases/canjear-c
 import { RegistrarPagoTransferenciaUseCase } from '../../application/use-cases/registrar-pago-transferencia.use-case.js';
 import { RevisarPagoManualUseCase } from '../../application/use-cases/revisar-pago-manual.use-case.js';
 import { EjecutarVencimientoMembresiasUseCase } from '../../application/use-cases/ejecutar-vencimiento-membresias.use-case.js';
+import { GetHistorialPagosNegocioUseCase } from '../../application/use-cases/get-historial-pagos-negocio.use-case.js';
+import { GetPagosAdminUseCase } from '../../application/use-cases/get-pagos-admin.use-case.js';
+import { type PagosMembresiaQueryInput, pagosMembresiaQuerySchema } from '@mi-alberdi/shared';
 
 export class MembresiasController {
   private readonly repository = new MembresiasRepositoryImpl();
@@ -24,6 +27,10 @@ export class MembresiasController {
   private readonly ejecutarVencimientosUseCase = new EjecutarVencimientoMembresiasUseCase(
     this.repository,
   );
+  private readonly getHistorialPagosNegocioUseCase = new GetHistorialPagosNegocioUseCase(
+    this.repository,
+  );
+  private readonly getPagosAdminUseCase = new GetPagosAdminUseCase(this.repository);
 
   getPlanes = async (_req: Request, res: Response): Promise<void> => {
     const result = await this.getPlanesUseCase.execute();
@@ -110,4 +117,42 @@ export class MembresiasController {
       result,
     );
   };
+
+  getHistorialPagosNegocio = async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) throw UnauthorizedError();
+    const param = req.params.negocioId;
+    const negocioId = Array.isArray(param) ? param[0] : param;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const result = await this.getHistorialPagosNegocioUseCase.execute({
+      negocioId,
+      usuarioId: req.user.id,
+      rol: req.user.rol,
+      page,
+      limit,
+    });
+
+    response(
+      res,
+      membresiasMessages.getPagosSuccess.statusCode,
+      membresiasMessages.getPagosSuccess.message,
+      result,
+    );
+  };
+
+  getPagosAdmin = async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) throw UnauthorizedError();
+    const query = pagosMembresiaQuerySchema.parse(req.query);
+    const result = await this.getPagosAdminUseCase.execute(req.user.rol, query);
+
+    response(
+      res,
+      membresiasMessages.getPagosSuccess.statusCode,
+      membresiasMessages.getPagosSuccess.message,
+      result,
+    );
+  };
 }
+
+
