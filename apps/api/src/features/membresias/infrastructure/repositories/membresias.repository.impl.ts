@@ -633,3 +633,4 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
     return { membresiasVencidas: vencidas.length };
   }
 }
+

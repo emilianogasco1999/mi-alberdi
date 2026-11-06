@@ -59,3 +59,4 @@ export interface IMembresiasRepository {
 
   ejecutarVencimientoMembresias(): Promise<{ membresiasVencidas: number }>;
 }
+

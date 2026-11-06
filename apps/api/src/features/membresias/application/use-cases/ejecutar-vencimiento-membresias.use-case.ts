@@ -5,7 +5,7 @@ export class EjecutarVencimientoMembresiasUseCase {
   constructor(private readonly repository: IMembresiasRepository) {}
 
   async execute(rol: string): Promise<{ membresiasVencidas: number }> {
-    const esAdmin = rol === 'administrador' || rol === 'moderador';
+    const esAdmin = rol === 'admin' || rol === 'administrador' || rol === 'moderador';
     if (!esAdmin) {
       throw ForbiddenError('Solo los administradores pueden ejecutar el proceso de vencimientos');
     }
@@ -13,3 +13,4 @@ export class EjecutarVencimientoMembresiasUseCase {
     return this.repository.ejecutarVencimientoMembresias();
   }
 }
+

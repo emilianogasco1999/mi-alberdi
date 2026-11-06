@@ -22,7 +22,7 @@ export class CanjearCodigoPromoUseCase {
       throw NotFoundError('Negocio no encontrado');
     }
 
-    const esAdmin = rol === 'administrador' || rol === 'moderador';
+    const esAdmin = rol === 'admin' || rol === 'administrador' || rol === 'moderador';
     if (ownerId !== usuarioId && !esAdmin) {
       throw ForbiddenError('No tienes permisos para canjear promociones en este negocio');
     }
@@ -41,3 +41,4 @@ export class CanjearCodigoPromoUseCase {
     };
   }
 }
+

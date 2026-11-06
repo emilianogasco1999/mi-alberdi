@@ -30,7 +30,7 @@ export class SolicitarCambioPlanUseCase {
       throw NotFoundError('Negocio no encontrado');
     }
 
-    const esAdmin = rol === 'administrador' || rol === 'moderador';
+    const esAdmin = rol === 'admin' || rol === 'administrador' || rol === 'moderador';
     if (ownerId !== usuarioId && !esAdmin) {
       throw ForbiddenError('No tienes permisos para modificar el plan de este negocio');
     }
@@ -88,3 +88,4 @@ export class SolicitarCambioPlanUseCase {
     };
   }
 }
+
