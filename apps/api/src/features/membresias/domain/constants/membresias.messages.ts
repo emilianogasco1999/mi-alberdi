@@ -21,7 +21,8 @@ export const membresiasMessages = {
   },
   registrarPagoTransferenciaSuccess: {
     statusCode: 201,
-    message: 'Comprobante de transferencia registrado exitosamente. En breve será verificado por el equipo de Mi Alberdi.',
+    message:
+      'Comprobante de transferencia registrado exitosamente. En breve será verificado por el equipo de Mi Alberdi.',
   },
   revisarPagoSuccess: {
     statusCode: 200,
@@ -48,6 +49,3 @@ export const membresiasMessages = {
     message: 'Pago simulado en modo sandbox procesado exitosamente',
   },
 } as const;
-
-
-

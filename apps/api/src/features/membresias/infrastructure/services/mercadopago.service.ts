@@ -34,31 +34,42 @@ export class MercadoPagoService {
     if (this.client) {
       try {
         const preference = new Preference(this.client);
-        const response = await preference.create({
-          body: {
-            items: [
-              {
-                id: params.pagoId,
-                title: `Plan ${params.nombrePlan.toUpperCase()} — Mi Alberdi (${params.meses} mes/es)`,
-                description: `Suscripción comercial en la plataforma Mi Alberdi`,
-                unit_price: params.montoArs,
-                quantity: 1,
-                currency_id: 'ARS',
-              },
-            ],
-            payer: {
-              email: params.emailComprador || 'comerciante@mialberdi.com.ar',
+
+        const preferenceBody: any = {
+          items: [
+            {
+              id: params.pagoId,
+              title: `Plan ${params.nombrePlan.toUpperCase()} — Mi Alberdi (${params.meses} mes/es)`,
+              description: `Suscripción comercial en la plataforma Mi Alberdi`,
+              unit_price: params.montoArs,
+              quantity: 1,
+              currency_id: 'ARS',
             },
-            back_urls: {
-              success: envs.MP_SUCCESS_URL,
-              failure: envs.MP_FAILURE_URL,
-              pending: envs.MP_PENDING_URL,
-            },
-            auto_return: 'approved',
-            external_reference: params.pagoId,
-            notification_url: envs.MP_WEBHOOK_URL,
-            statement_descriptor: 'MI ALBERDI',
+          ],
+          payer: {
+            email: params.emailComprador || 'comerciante@mialberdi.com.ar',
           },
+          back_urls: {
+            success: envs.MP_SUCCESS_URL,
+            failure: envs.MP_FAILURE_URL,
+            pending: envs.MP_PENDING_URL,
+          },
+          external_reference: params.pagoId,
+          statement_descriptor: 'MI ALBERDI',
+        };
+
+        // Mercado Pago exige que back_urls.success sea HTTPS para habilitar auto_return
+        if (envs.MP_SUCCESS_URL.startsWith('https://')) {
+          preferenceBody.auto_return = 'approved';
+        }
+
+        // notification_url solo si es una URL pública (no localhost)
+        if (envs.MP_WEBHOOK_URL.startsWith('https://')) {
+          preferenceBody.notification_url = envs.MP_WEBHOOK_URL;
+        }
+
+        const response = await preference.create({
+          body: preferenceBody,
         });
 
         return {
@@ -75,6 +86,7 @@ export class MercadoPagoService {
       }
     }
 
+
     // Modo Sandbox / Fallback de desarrollo (cuando aún no se configuró MP_ACCESS_TOKEN)
     const mockPrefId = `pref_dev_${Date.now()}_${params.pagoId.slice(0, 8)}`;
     const redirectUrl = `${envs.MP_SUCCESS_URL}&payment_id=mock_mp_${Date.now()}&status=approved&external_reference=${params.pagoId}`;
@@ -87,3 +99,4 @@ export class MercadoPagoService {
     };
   }
 }
+

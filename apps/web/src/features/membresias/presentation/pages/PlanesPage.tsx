@@ -76,11 +76,12 @@ export function PlanesPage() {
       const data = response.data.data;
       setPreferenciaGenerada(data);
 
-      // Si tiene initPoint de Mercado Pago válido que no sea fallback localhost, podemos redirigir
+      // Si tiene URL de pasarela real de Mercado Pago (sandbox o producción)
       const urlPago = data.sandboxInitPoint || data.initPoint;
 
       if (urlPago.startsWith('https://')) {
-        window.open(urlPago, '_blank');
+        // Redirigir directamente o abrir en pestaña
+        window.location.href = urlPago;
       } else {
         setMensajeExito(
           `Preferencia generada en Sandbox. Pago ID: ${data.pagoId}. Podés simular la aprobación con el botón debajo.`,

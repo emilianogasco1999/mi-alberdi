@@ -688,7 +688,6 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
     };
   }
 
-
   async ejecutarVencimientoMembresias(): Promise<{ membresiasVencidas: number }> {
     const ahora = new Date();
 
@@ -971,5 +970,3 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
     });
   }
 }
-
-

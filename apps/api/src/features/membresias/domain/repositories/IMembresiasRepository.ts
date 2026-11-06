@@ -88,5 +88,3 @@ export interface IMembresiasRepository {
     metadata?: Record<string, unknown>;
   }): Promise<PagoMembresiaDTO>;
 }
-
-

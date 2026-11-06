@@ -79,12 +79,7 @@ export class MembresiasController {
   canjearCodigoPromo = async (req: Request, res: Response): Promise<void> => {
     if (!req.user) throw UnauthorizedError();
     const result = await this.canjearPromoUseCase.execute(req.user.id, req.user.rol, req.body);
-    response(
-      res,
-      membresiasMessages.canjearPromoSuccess.statusCode,
-      result.mensaje,
-      result,
-    );
+    response(res, membresiasMessages.canjearPromoSuccess.statusCode, result.mensaje, result);
   };
 
   registrarPagoTransferencia = async (req: Request, res: Response): Promise<void> => {
@@ -182,12 +177,7 @@ export class MembresiasController {
     const payload = { ...req.query, ...req.body };
     const result = await this.webhookMpUseCase.execute(payload);
 
-    response(
-      res,
-      membresiasMessages.webhookProcessedSuccess.statusCode,
-      result.mensaje,
-      result,
-    );
+    response(res, membresiasMessages.webhookProcessedSuccess.statusCode, result.mensaje, result);
   };
 
   simularPagoSandbox = async (req: Request, res: Response): Promise<void> => {
@@ -201,6 +191,3 @@ export class MembresiasController {
     );
   };
 }
-
-
-
