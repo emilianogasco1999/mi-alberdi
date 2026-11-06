@@ -170,3 +170,50 @@ export const ESTADOS_PUBLICACION_VALUES = [
 ] as const;
 
 export type EstadoPublicacion = (typeof ESTADOS_PUBLICACION)[keyof typeof ESTADOS_PUBLICACION];
+
+export const ESTADOS_MEMBRESIA = {
+  ACTIVA: 'activa',
+  EN_PRUEBA: 'en_prueba',
+  VENCIDA: 'vencida',
+  CANCELADA: 'cancelada',
+} as const;
+
+export const ESTADOS_MEMBRESIA_VALUES = [
+  ESTADOS_MEMBRESIA.ACTIVA,
+  ESTADOS_MEMBRESIA.EN_PRUEBA,
+  ESTADOS_MEMBRESIA.VENCIDA,
+  ESTADOS_MEMBRESIA.CANCELADA,
+] as const;
+
+export type EstadoMembresia = (typeof ESTADOS_MEMBRESIA)[keyof typeof ESTADOS_MEMBRESIA];
+
+export const ESTADOS_PAGO = {
+  PENDIENTE: 'pendiente',
+  APROBADO: 'aprobado',
+  RECHAZADO: 'rechazado',
+  REEMBOLSADO: 'reembolsado',
+} as const;
+
+export const ESTADOS_PAGO_VALUES = [
+  ESTADOS_PAGO.PENDIENTE,
+  ESTADOS_PAGO.APROBADO,
+  ESTADOS_PAGO.RECHAZADO,
+  ESTADOS_PAGO.REEMBOLSADO,
+] as const;
+
+export type EstadoPago = (typeof ESTADOS_PAGO)[keyof typeof ESTADOS_PAGO];
+
+export const PASARELAS_PAGO = {
+  MERCADOPAGO: 'mercadopago',
+  TRANSFERENCIA_MANUAL: 'transferencia_manual',
+  PROMO: 'promo',
+} as const;
+
+export const PASARELAS_PAGO_VALUES = [
+  PASARELAS_PAGO.MERCADOPAGO,
+  PASARELAS_PAGO.TRANSFERENCIA_MANUAL,
+  PASARELAS_PAGO.PROMO,
+] as const;
+
+export type PasarelaPago = (typeof PASARELAS_PAGO)[keyof typeof PASARELAS_PAGO];
+
