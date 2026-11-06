@@ -39,63 +39,118 @@
  *           schema:
  *             type: object
  *             required:
- *               - nombre
- *               - descripcion
- *               - categoriaId
- *               - sucursal
+ *               - negocio
+ *               - ubicacionPrincipal
  *             properties:
- *               nombre:
- *                 type: string
- *               descripcion:
- *                 type: string
- *               categoriaId:
- *                 type: string
- *                 format: uuid
- *               metodosPagoIds:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: uuid
- *               atiendeADomicilio:
- *                 type: boolean
- *               haceEnvios:
- *                 type: boolean
- *               sucursal:
+ *               negocio:
  *                 type: object
- *                 required: [calle]
+ *                 required:
+ *                   - tipoPerfil
+ *                   - rubroPrincipalId
+ *                   - nombreComercial
+ *                   - whatsappPrincipal
  *                 properties:
- *                   nombre:
+ *                   tipoPerfil:
  *                     type: string
- *                   calle:
+ *                     enum: [comercio, oficio_independiente, servicio_profesional, emprendimiento]
+ *                     example: comercio
+ *                   rubroPrincipalId:
  *                     type: string
- *                   numero:
+ *                     format: uuid
+ *                     example: "2b7e1fe4-349a-4643-8ffd-7d47e9e0f398"
+ *                   nombreComercial:
  *                     type: string
+ *                     example: "Pizzería San Martín"
+ *                   eslogan:
+ *                     type: string
+ *                     example: "Las mejores pizzas a la leña"
+ *                   descripcion:
+ *                     type: string
+ *                     example: "Pizzas artesanales, empanadas tucumanas y sándwiches de milanesa."
+ *                   whatsappPrincipal:
+ *                     type: string
+ *                     example: "+5493865123456"
+ *                   whatsappMensajeDefault:
+ *                     type: string
+ *                     example: "Hola, te vi en Mi Alberdi y quería consultar por..."
+ *                   modalidadPrincipal:
+ *                     type: string
+ *                     enum: [horarios_fijos, cita_previa, urgencias_24hs]
+ *                     example: horarios_fijos
+ *                   atiendeADomicilio:
+ *                     type: boolean
+ *                     example: true
+ *                   haceEnvios:
+ *                     type: boolean
+ *                     example: true
+ *                   alcanceEnvios:
+ *                     type: string
+ *                     enum: [sin_envio, solo_alberdi, alberdi_y_zonas_cercanas, todo_el_pais]
+ *                     example: solo_alberdi
+ *               ubicacionPrincipal:
+ *                 type: object
+ *                 required:
+ *                   - direccionEscrita
+ *                 properties:
+ *                   nombreSucursal:
+ *                     type: string
+ *                     example: "Casa Central"
+ *                   direccionEscrita:
+ *                     type: string
+ *                     example: "Av. San Martín 450"
  *                   barrio:
  *                     type: string
- *                   telefono:
+ *                     example: "Centro"
+ *                   referenciaVisual:
  *                     type: string
- *                   whatsapp:
+ *                     example: "Frente a la plaza principal"
+ *                   whatsappSucursal:
  *                     type: string
+ *                     example: "+5493865123456"
+ *                   mostrarDireccionExacta:
+ *                     type: boolean
+ *                     example: true
  *               horarios:
  *                 type: array
  *                 items:
  *                   type: object
+ *                   required:
+ *                     - diaSemana
  *                   properties:
  *                     diaSemana:
  *                       type: integer
  *                       minimum: 0
  *                       maximum: 6
- *                     horaApertura:
+ *                       description: "0 = Domingo, 1 = Lunes, ..., 6 = Sábado"
+ *                       example: 1
+ *                     cerrado:
+ *                       type: boolean
+ *                       example: false
+ *                     horarioCorrido:
+ *                       type: boolean
+ *                       example: false
+ *                     aperturaManana:
  *                       type: string
  *                       example: "08:30"
- *                     horaCierre:
+ *                     cierreManana:
  *                       type: string
  *                       example: "12:30"
- *                     turno:
- *                       type: integer
+ *                     aperturaTarde:
+ *                       type: string
+ *                       example: "17:30"
+ *                     cierreTarde:
+ *                       type: string
+ *                       example: "22:00"
+ *               metodosPagoIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: uuid
  *     responses:
  *       201:
  *         description: Perfil comercial creado exitosamente
+ *       400:
+ *         description: Validación fallida
  *       401:
  *         description: No autorizado
  */
@@ -115,20 +170,51 @@
  *           schema:
  *             type: object
  *             required:
- *               - nombre
- *               - descripcion
- *               - categoriaId
+ *               - tipoPerfil
+ *               - rubroPrincipalId
+ *               - nombreComercial
+ *               - whatsappPrincipal
  *             properties:
- *               nombre:
+ *               tipoPerfil:
  *                 type: string
- *               descripcion:
- *                 type: string
- *               categoriaId:
+ *                 enum: [comercio, oficio_independiente, servicio_profesional, emprendimiento]
+ *                 example: comercio
+ *               rubroPrincipalId:
  *                 type: string
  *                 format: uuid
+ *                 example: "2b7e1fe4-349a-4643-8ffd-7d47e9e0f398"
+ *               nombreComercial:
+ *                 type: string
+ *                 example: "Rotisería Alberdi"
+ *               descripcion:
+ *                 type: string
+ *                 example: "Comidas caseras para llevar y delivery en Alberdi."
+ *               eslogan:
+ *                 type: string
+ *                 example: "El sabor de casa todos los días"
+ *               whatsappPrincipal:
+ *                 type: string
+ *                 example: "+5493865123456"
+ *               atiendeADomicilio:
+ *                 type: boolean
+ *                 example: false
+ *               haceEnvios:
+ *                 type: boolean
+ *                 example: true
+ *               alcanceEnvios:
+ *                 type: string
+ *                 enum: [sin_envio, solo_alberdi, alberdi_y_zonas_cercanas, todo_el_pais]
+ *                 example: solo_alberdi
+ *               metodosPagoIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: uuid
  *     responses:
  *       201:
  *         description: Negocio creado exitosamente
+ *       400:
+ *         description: Validación fallida
  */
 
 /**
@@ -188,18 +274,29 @@
  *           schema:
  *             type: object
  *             properties:
- *               nombre:
+ *               nombreComercial:
  *                 type: string
+ *                 example: "Rotisería Alberdi Centro"
  *               descripcion:
  *                 type: string
+ *                 example: "Viandas diarias y platos especiales de fin de semana."
+ *               eslogan:
+ *                 type: string
+ *                 example: "Sabor tradicional"
  *               logoUrl:
  *                 type: string
- *               portadaUrl:
+ *               bannerUrl:
  *                 type: string
+ *               whatsappPrincipal:
+ *                 type: string
+ *                 example: "+5493865123456"
  *               atiendeADomicilio:
  *                 type: boolean
  *               haceEnvios:
  *                 type: boolean
+ *               alcanceEnvios:
+ *                 type: string
+ *                 enum: [sin_envio, solo_alberdi, alberdi_y_zonas_cercanas, todo_el_pais]
  *     responses:
  *       200:
  *         description: Negocio actualizado exitosamente
@@ -226,20 +323,29 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [calle]
+ *             required:
+ *               - direccionEscrita
  *             properties:
- *               nombre:
+ *               nombreSucursal:
  *                 type: string
- *               calle:
+ *                 example: "Sucursal Barrio Norte"
+ *               direccionEscrita:
  *                 type: string
- *               numero:
- *                 type: string
+ *                 example: "Belgrano 120"
  *               barrio:
  *                 type: string
- *               telefono:
+ *                 example: "Norte"
+ *               referenciaVisual:
  *                 type: string
- *               whatsapp:
+ *                 example: "A media cuadra de la escuela"
+ *               whatsappSucursal:
  *                 type: string
+ *                 example: "+5493865998877"
+ *               telefonoSucursal:
+ *                 type: string
+ *               mostrarDireccionExacta:
+ *                 type: boolean
+ *                 example: true
  *     responses:
  *       201:
  *         description: Sucursal agregada exitosamente
@@ -275,14 +381,18 @@
  *           schema:
  *             type: object
  *             properties:
- *               nombre:
+ *               nombreSucursal:
  *                 type: string
- *               calle:
- *                 type: string
- *               numero:
+ *               direccionEscrita:
  *                 type: string
  *               barrio:
  *                 type: string
+ *               referenciaVisual:
+ *                 type: string
+ *               whatsappSucursal:
+ *                 type: string
+ *               mostrarDireccionExacta:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Sucursal actualizada exitosamente
@@ -337,26 +447,43 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [horarios]
+ *             required:
+ *               - horarios
  *             properties:
  *               horarios:
  *                 type: array
  *                 items:
  *                   type: object
- *                   required: [diaSemana, horaApertura, horaCierre, turno]
+ *                   required:
+ *                     - diaSemana
  *                   properties:
  *                     diaSemana:
  *                       type: integer
  *                       minimum: 0
  *                       maximum: 6
- *                     horaApertura:
+ *                       description: "0 = Domingo, 1 = Lunes, ..., 6 = Sábado"
+ *                       example: 1
+ *                     cerrado:
+ *                       type: boolean
+ *                       example: false
+ *                     horarioCorrido:
+ *                       type: boolean
+ *                       example: false
+ *                     aperturaManana:
  *                       type: string
  *                       example: "08:30"
- *                     horaCierre:
+ *                     cierreManana:
  *                       type: string
  *                       example: "12:30"
- *                     turno:
- *                       type: integer
+ *                     aperturaTarde:
+ *                       type: string
+ *                       example: "17:30"
+ *                     cierreTarde:
+ *                       type: string
+ *                       example: "22:00"
+ *                     notaEspecial:
+ *                       type: string
+ *                       example: "Atención solo por ventanilla a la noche"
  *     responses:
  *       200:
  *         description: Horarios configurados exitosamente
@@ -383,13 +510,23 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [metodosPagoIds]
+ *             required:
+ *               - metodosPago
  *             properties:
- *               metodosPagoIds:
+ *               metodosPago:
  *                 type: array
  *                 items:
- *                   type: string
- *                   format: uuid
+ *                   type: object
+ *                   required:
+ *                     - metodoPagoId
+ *                   properties:
+ *                     metodoPagoId:
+ *                       type: string
+ *                       format: uuid
+ *                       example: "d41d8cd9-8f00-4b20-8000-000000000001"
+ *                     detalle:
+ *                       type: string
+ *                       example: "Alias: pizzeriasanmartin.mp"
  *     responses:
  *       200:
  *         description: Métodos de pago vinculados exitosamente
