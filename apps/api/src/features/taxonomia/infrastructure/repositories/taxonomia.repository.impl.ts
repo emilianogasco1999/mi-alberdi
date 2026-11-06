@@ -5,6 +5,7 @@ import type {
   RubroGrupoArbolDTO,
   CategoriaNodoDTO,
   TipoPermitido,
+  PlanCatalogo,
 } from '@mi-alberdi/shared';
 import type { ITaxonomiaRepository } from '../../domain/repositories/ITaxonomiaRepository.js';
 
@@ -180,6 +181,31 @@ export class TaxonomiaRepositoryImpl implements ITaxonomiaRepository {
       nombre: m.nombre,
       icono: m.icono,
       activo: m.activo,
+    }));
+  }
+
+  async getPlanes(): Promise<PlanCatalogo[]> {
+    const planes = await prisma.planCatalogo.findMany({
+      where: { activo: true },
+      orderBy: { prioridadBase: 'asc' },
+    });
+
+    return planes.map((p) => ({
+      codigo: p.codigo as 'gratis' | 'plata' | 'oro',
+      nombre: p.nombre,
+      precioMensualArs: Number(p.precioMensualArs),
+      maxPublicaciones: p.maxPublicaciones,
+      maxFotosPorPublicacion: p.maxFotosPorPublicacion,
+      cuposDestacados: p.cuposDestacados,
+      maxSucursales: p.maxSucursales,
+      maxReelsActivos: p.maxReelsActivos,
+      prioridadBase: p.prioridadBase,
+      permiteEstadisticas: p.permiteEstadisticas,
+      permitePinDestacado: p.permitePinDestacado,
+      permiteBanner: p.permiteBanner,
+      permiteAsistenteIa: p.permiteAsistenteIa,
+      caracteristicasBase: (p.caracteristicasBase ?? {}) as Record<string, unknown>,
+      activo: p.activo,
     }));
   }
 }

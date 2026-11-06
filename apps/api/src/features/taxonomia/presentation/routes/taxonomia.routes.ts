@@ -10,7 +10,7 @@ export const TaxonomiaRoutes = (): Router => {
   router.get('/rubros', catchedAsync(controller.getRubros));
   router.get('/rubros/:rubroIdOrSlug/categorias', catchedAsync(controller.getCategoriasByRubro));
   router.get('/metodos-pago', catchedAsync(controller.getMetodosPago));
+  router.get('/planes', catchedAsync(controller.getPlanes));
 
   return router;
 };
-
