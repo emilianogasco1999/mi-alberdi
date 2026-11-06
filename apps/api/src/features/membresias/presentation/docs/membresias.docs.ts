@@ -185,6 +185,72 @@
 
 /**
  * @openapi
+ * /api/membresias/pagos/mercadopago/checkout:
+ *   post:
+ *     summary: Crear preferencia de pago en Mercado Pago (Checkout Pro) para suscribir o renovar un plan
+ *     tags: [Membresias]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - negocioId
+ *               - planCodigo
+ *             properties:
+ *               negocioId:
+ *                 type: string
+ *                 format: uuid
+ *               planCodigo:
+ *                 type: string
+ *                 enum: [plata, oro]
+ *                 example: plata
+ *               periodoMeses:
+ *                 type: integer
+ *                 default: 1
+ *                 example: 1
+ *     responses:
+ *       201:
+ *         description: Preferencia generada exitosamente
+ *
+ * /api/membresias/pagos/webhook/mercadopago:
+ *   post:
+ *     summary: Webhook de notificación automática de pagos de Mercado Pago
+ *     tags: [Membresias]
+ *     responses:
+ *       200:
+ *         description: Webhook procesado exitosamente
+ *
+ * /api/membresias/pagos/sandbox/simular:
+ *   post:
+ *     summary: (Sandbox) Simular aprobación inmediata de un pago para pruebas locales sin túnel ngrok
+ *     tags: [Membresias]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pagoId
+ *             properties:
+ *               pagoId:
+ *                 type: string
+ *                 format: uuid
+ *               estado:
+ *                 type: string
+ *                 enum: [approved, rejected, pending]
+ *                 default: approved
+ *     responses:
+ *       200:
+ *         description: Pago simulado y procesado exitosamente
+ */
+
+/**
+ * @openapi
  * /api/membresias/pagos/negocio/{negocioId}:
  *   get:
  *     summary: Obtener el historial de pagos y comprobantes de un negocio propio
