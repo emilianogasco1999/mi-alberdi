@@ -10,11 +10,9 @@ import type {
   AltaNegocioWizardInput,
   ConfigurarHorariosSemanaInput,
   CreateNegocioInput,
-  CreatePublicacionInput,
   CreateSucursalInput,
   HorarioItemInput,
   UpdateNegocioInput,
-  UpdatePublicacionInput,
   UpdateSucursalInput,
   VincularMetodosPagoInput,
 } from '../schemas/negocio.schema.js';
@@ -23,11 +21,9 @@ export type {
   AltaNegocioWizardInput,
   ConfigurarHorariosSemanaInput,
   CreateNegocioInput,
-  CreatePublicacionInput,
   CreateSucursalInput,
   HorarioItemInput,
   UpdateNegocioInput,
-  UpdatePublicacionInput,
   UpdateSucursalInput,
   VincularMetodosPagoInput,
 };
@@ -221,4 +217,3 @@ export interface NegocioPublicoDTO {
   horarios: HorarioNegocioDTO[];
   metodosPago: NegocioMetodoPagoDTO[];
 }
-

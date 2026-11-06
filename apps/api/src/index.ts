@@ -12,8 +12,7 @@ import { AuthRoutes } from '@features/auth/presentation/routes/auth.routes.js';
 import { TaxonomiaRoutes } from '@features/taxonomia/presentation/routes/taxonomia.routes.js';
 import { StorageRoutes } from '@features/storage/presentation/routes/storage.routes.js';
 import { NegociosRoutes } from '@features/negocios/presentation/routes/negocios.routes.js';
-
-
+import { CatalogoRoutes } from '@features/catalogo/presentation/routes/catalogo.routes.js';
 
 const app = express();
 
@@ -66,8 +65,7 @@ app.use('/api/auth', AuthRoutes());
 app.use('/api/taxonomia', TaxonomiaRoutes());
 app.use('/api/storage', StorageRoutes());
 app.use('/api/negocios', NegociosRoutes());
-
-
+app.use('/api/catalogo', CatalogoRoutes());
 
 // Manejador centralizado de errores
 app.use(errorHandler);
@@ -76,4 +74,3 @@ app.listen(envs.PORT_API, () => {
   console.log(`🚀 [Mi Alberdi API] corriendo en http://localhost:${envs.PORT_API}`);
   console.log(`📚 [Swagger Docs] disponible en http://localhost:${envs.PORT_API}/api-docs`);
 });
-

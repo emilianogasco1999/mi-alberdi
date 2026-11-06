@@ -15,5 +15,8 @@ export const taxonomiaMessages = {
     statusCode: 200,
     message: 'Métodos de pago del catálogo obtenidos exitosamente',
   },
+  getPlanesSuccess: {
+    statusCode: 200,
+    message: 'Planes de suscripción obtenidos exitosamente',
+  },
 } as const;
-

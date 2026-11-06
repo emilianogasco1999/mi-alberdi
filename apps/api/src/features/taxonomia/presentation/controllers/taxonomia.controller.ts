@@ -6,6 +6,7 @@ import { GetArbolTaxonomiaUseCase } from '../../application/use-cases/get-arbol-
 import { GetRubrosUseCase } from '../../application/use-cases/get-rubros.use-case.js';
 import { GetCategoriasByRubroUseCase } from '../../application/use-cases/get-categorias-by-rubro.use-case.js';
 import { GetMetodosPagoUseCase } from '../../application/use-cases/get-metodos-pago.use-case.js';
+import { GetPlanesUseCase } from '../../application/use-cases/get-planes.use-case.js';
 
 export class TaxonomiaController {
   private readonly repository = new TaxonomiaRepositoryImpl();
@@ -13,6 +14,7 @@ export class TaxonomiaController {
   private readonly getRubrosUseCase = new GetRubrosUseCase(this.repository);
   private readonly getCategoriasByRubroUseCase = new GetCategoriasByRubroUseCase(this.repository);
   private readonly getMetodosPagoUseCase = new GetMetodosPagoUseCase(this.repository);
+  private readonly getPlanesUseCase = new GetPlanesUseCase(this.repository);
 
   getArbol = async (_req: Request, res: Response): Promise<void> => {
     const arbol = await this.getArbolUseCase.execute();
@@ -55,5 +57,14 @@ export class TaxonomiaController {
       metodos,
     );
   };
-}
 
+  getPlanes = async (_req: Request, res: Response): Promise<void> => {
+    const planes = await this.getPlanesUseCase.execute();
+    response(
+      res,
+      taxonomiaMessages.getPlanesSuccess.statusCode,
+      taxonomiaMessages.getPlanesSuccess.message,
+      planes,
+    );
+  };
+}

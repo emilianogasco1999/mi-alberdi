@@ -1,9 +1,12 @@
 /**
- * @swagger
+ * @openapi
  * tags:
  *   name: Auth
- *   description: Autenticación y sesión de usuarios en Mi Alberdi
- *
+ *   description: Autenticación, registro y sesión de usuarios en Mi Alberdi
+ */
+
+/**
+ * @openapi
  * /api/auth/register:
  *   post:
  *     summary: Registra un nuevo usuario (vecino o comerciante)
@@ -33,7 +36,10 @@
  *         description: Usuario creado exitosamente
  *       409:
  *         description: El email ya se encuentra registrado
- *
+ */
+
+/**
+ * @openapi
  * /api/auth/login:
  *   post:
  *     summary: Inicia sesión y retorna JWT + cookie httpOnly
@@ -57,5 +63,31 @@
  *       401:
  *         description: Credenciales inválidas
  */
-export {};
 
+/**
+ * @openapi
+ * /api/auth/me:
+ *   get:
+ *     summary: Obtener el perfil del usuario autenticado actualmente
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil de usuario obtenido exitosamente
+ *       401:
+ *         description: No autenticado o token inválido
+ */
+
+/**
+ * @openapi
+ * /api/auth/logout:
+ *   post:
+ *     summary: Cerrar sesión e invalidar cookies
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sesión cerrada exitosamente
+ */
