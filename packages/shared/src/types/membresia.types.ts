@@ -12,6 +12,8 @@ import type {
   RegistrarPagoTransferenciaInput,
   RevisarPagoManualInput,
   SolicitarCambioPlanInput,
+  CrearPreferenciaMpInput,
+  SimularWebhookMpInput,
 } from '../schemas/membresia.schema.js';
 
 export type {
@@ -22,7 +24,10 @@ export type {
   RegistrarPagoTransferenciaInput,
   RevisarPagoManualInput,
   SolicitarCambioPlanInput,
+  CrearPreferenciaMpInput,
+  SimularWebhookMpInput,
 };
+
 
 export interface PlanCatalogoDTO {
   codigo: CodigoPlan;
@@ -105,4 +110,15 @@ export interface EstadoMembresiaNegocioDTO {
   entitlements: Record<string, unknown>;
   membresiaActiva: MembresiaDTO | null;
 }
+
+export interface PreferenciaMpResponseDTO {
+  preferenceId: string;
+  initPoint: string;
+  sandboxInitPoint: string;
+  pagoId: string;
+  montoArs: number;
+  planCodigo: CodigoPlan;
+  modoSandbox: boolean;
+}
+
 

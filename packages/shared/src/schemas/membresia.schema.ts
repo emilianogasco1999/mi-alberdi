@@ -102,3 +102,21 @@ export const membresiasQuerySchema = z.object({
 
 export type MembresiasQueryInput = z.infer<typeof membresiasQuerySchema>;
 
+export const crearPreferenciaMpSchema = z.object({
+  negocioId: z.string().uuid({ message: 'ID de negocio inválido' }),
+  planCodigo: z.enum(['plata', 'oro'], {
+    message: 'El plan debe ser de suscripción de pago (plata u oro)',
+  }),
+  periodoMeses: z.number().int().min(1).max(12).default(1),
+});
+
+export type CrearPreferenciaMpInput = z.infer<typeof crearPreferenciaMpSchema>;
+
+export const simularWebhookMpSchema = z.object({
+  pagoId: z.string().uuid({ message: 'ID de pago inválido' }),
+  estado: z.enum(['approved', 'rejected', 'pending']).default('approved'),
+});
+
+export type SimularWebhookMpInput = z.infer<typeof simularWebhookMpSchema>;
+
+

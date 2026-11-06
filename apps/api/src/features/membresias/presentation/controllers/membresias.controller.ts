@@ -12,6 +12,9 @@ import { RevisarPagoManualUseCase } from '../../application/use-cases/revisar-pa
 import { EjecutarVencimientoMembresiasUseCase } from '../../application/use-cases/ejecutar-vencimiento-membresias.use-case.js';
 import { GetHistorialPagosNegocioUseCase } from '../../application/use-cases/get-historial-pagos-negocio.use-case.js';
 import { GetPagosAdminUseCase } from '../../application/use-cases/get-pagos-admin.use-case.js';
+import { CrearCheckoutMercadoPagoUseCase } from '../../application/use-cases/crear-checkout-mercadopago.use-case.js';
+import { ProcesarWebhookMercadoPagoUseCase } from '../../application/use-cases/procesar-webhook-mercadopago.use-case.js';
+import { SimularPagoWebhookUseCase } from '../../application/use-cases/simular-pago-webhook.use-case.js';
 import { type PagosMembresiaQueryInput, pagosMembresiaQuerySchema } from '@mi-alberdi/shared';
 
 export class MembresiasController {
@@ -31,6 +34,9 @@ export class MembresiasController {
     this.repository,
   );
   private readonly getPagosAdminUseCase = new GetPagosAdminUseCase(this.repository);
+  private readonly crearCheckoutMpUseCase = new CrearCheckoutMercadoPagoUseCase(this.repository);
+  private readonly webhookMpUseCase = new ProcesarWebhookMercadoPagoUseCase(this.repository);
+  private readonly simularPagoUseCase = new SimularPagoWebhookUseCase(this.repository);
 
   getPlanes = async (_req: Request, res: Response): Promise<void> => {
     const result = await this.getPlanesUseCase.execute();
@@ -153,6 +159,48 @@ export class MembresiasController {
       result,
     );
   };
+
+  crearCheckoutMp = async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) throw UnauthorizedError();
+    const result = await this.crearCheckoutMpUseCase.execute({
+      usuarioId: req.user.id,
+      rol: req.user.rol,
+      emailComprador: req.user.email,
+      input: req.body,
+    });
+
+    response(
+      res,
+      membresiasMessages.crearCheckoutSuccess.statusCode,
+      membresiasMessages.crearCheckoutSuccess.message,
+      result,
+    );
+  };
+
+  webhookMp = async (req: Request, res: Response): Promise<void> => {
+    // Los webhooks pueden venir por body (POST) o query params (GET/IPN)
+    const payload = { ...req.query, ...req.body };
+    const result = await this.webhookMpUseCase.execute(payload);
+
+    response(
+      res,
+      membresiasMessages.webhookProcessedSuccess.statusCode,
+      result.mensaje,
+      result,
+    );
+  };
+
+  simularPagoSandbox = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.simularPagoUseCase.execute(req.body);
+
+    response(
+      res,
+      membresiasMessages.simularPagoSuccess.statusCode,
+      membresiasMessages.simularPagoSuccess.message,
+      result,
+    );
+  };
 }
+
 
 
