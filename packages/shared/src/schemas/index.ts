@@ -4,3 +4,4 @@ export * from './taxonomia.schema.js';
 export * from './storage.schema.js';
 export * from './catalogo.schema.js';
 export * from './descubrimiento.schema.js';
+export * from './membresia.schema.js';
