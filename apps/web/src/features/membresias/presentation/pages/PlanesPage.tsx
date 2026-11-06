@@ -80,8 +80,11 @@ export function PlanesPage() {
       const urlPago = data.sandboxInitPoint || data.initPoint;
 
       if (urlPago.startsWith('https://')) {
-        // Redirigir directamente o abrir en pestaña
-        window.location.href = urlPago;
+        // Abrir pasarela de Mercado Pago en una pestaña nueva
+        window.open(urlPago, '_blank', 'noopener,noreferrer');
+        setMensajeExito(
+          'Se abrió la pasarela de Mercado Pago en una nueva pestaña. Cuando termines de pagar, podés simular la aprobación con el botón debajo para activar la membresía al instante.',
+        );
       } else {
         setMensajeExito(
           `Preferencia generada en Sandbox. Pago ID: ${data.pagoId}. Podés simular la aprobación con el botón debajo.`,

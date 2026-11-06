@@ -1,9 +1,4 @@
-import type {
-  CodigoPlan,
-  EstadoMembresia,
-  EstadoPago,
-  PasarelaPago,
-} from '../constants/domain.js';
+import type { CodigoPlan, EstadoMembresia, EstadoPago, PasarelaPago } from '../constants/domain.js';
 import type {
   CanjearCodigoPromoInput,
   CrearCodigoPromocionalInput,
@@ -27,7 +22,6 @@ export type {
   CrearPreferenciaMpInput,
   SimularWebhookMpInput,
 };
-
 
 export interface PlanCatalogoDTO {
   codigo: CodigoPlan;
@@ -120,5 +114,3 @@ export interface PreferenciaMpResponseDTO {
   planCodigo: CodigoPlan;
   modoSandbox: boolean;
 }
-
-

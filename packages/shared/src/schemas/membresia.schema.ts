@@ -118,5 +118,3 @@ export const simularWebhookMpSchema = z.object({
 });
 
 export type SimularWebhookMpInput = z.infer<typeof simularWebhookMpSchema>;
-
-
