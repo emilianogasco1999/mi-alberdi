@@ -44,7 +44,16 @@ export const MembresiasRoutes = (): Router => {
     catchedAsync(controller.registrarPagoTransferencia),
   );
 
-  // 6. Rutas de administración
+  // 6. Historial de pagos de un negocio (autenticado para el dueño o admin)
+  router.get(
+    '/pagos/negocio/:negocioId',
+    authMiddleware,
+    catchedAsync(controller.getHistorialPagosNegocio),
+  );
+
+  // 7. Rutas de administración
+  router.get('/admin/pagos', authMiddleware, catchedAsync(controller.getPagosAdmin));
+
   router.post(
     '/admin/revisar-pago',
     authMiddleware,

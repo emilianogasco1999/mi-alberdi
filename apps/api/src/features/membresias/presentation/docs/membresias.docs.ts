@@ -185,6 +185,74 @@
 
 /**
  * @openapi
+ * /api/membresias/pagos/negocio/{negocioId}:
+ *   get:
+ *     summary: Obtener el historial de pagos y comprobantes de un negocio propio
+ *     tags: [Membresias]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: negocioId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Historial de pagos obtenido exitosamente
+ *       403:
+ *         description: No tienes permisos para ver los pagos de este negocio
+ */
+
+/**
+ * @openapi
+ * /api/membresias/admin/pagos:
+ *   get:
+ *     summary: (Admin) Listar todos los pagos del sistema con filtros por estado o pasarela
+ *     tags: [Membresias]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: estado
+ *         schema:
+ *           type: string
+ *           enum: [pendiente, aprobado, rechazado, reembolsado]
+ *       - in: query
+ *         name: pasarela
+ *         schema:
+ *           type: string
+ *           enum: [mercadopago, transferencia_manual, promo]
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Listado de pagos obtenido exitosamente
+ *       403:
+ *         description: Solo administradores pueden consultar este listado
+ */
+
+/**
+ * @openapi
  * /api/membresias/admin/revisar-pago:
  *   post:
  *     summary: (Admin) Aprobar o rechazar un pago manual registrado por un comerciante
