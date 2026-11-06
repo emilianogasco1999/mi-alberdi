@@ -13,6 +13,7 @@ import { TaxonomiaRoutes } from '@features/taxonomia/presentation/routes/taxonom
 import { StorageRoutes } from '@features/storage/presentation/routes/storage.routes.js';
 import { NegociosRoutes } from '@features/negocios/presentation/routes/negocios.routes.js';
 import { CatalogoRoutes } from '@features/catalogo/presentation/routes/catalogo.routes.js';
+import { DescubrimientoRoutes } from '@features/descubrimiento/presentation/routes/descubrimiento.routes.js';
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.use('/api/taxonomia', TaxonomiaRoutes());
 app.use('/api/storage', StorageRoutes());
 app.use('/api/negocios', NegociosRoutes());
 app.use('/api/catalogo', CatalogoRoutes());
+app.use('/api/descubrimiento', DescubrimientoRoutes());
 
 // Manejador centralizado de errores
 app.use(errorHandler);
