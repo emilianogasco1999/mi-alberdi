@@ -11,7 +11,7 @@ export function PlanesPage() {
   const searchParams = useSearchParams();
   const statusParam = searchParams.get('status');
 
-  const { user } = useAuthStore();
+  const { user, accessToken } = useAuthStore();
   const [planes, setPlanes] = useState<PlanCatalogoDTO[]>([]);
   const [negocioId, setNegocioId] = useState<string>('f549aa39-a7ed-4e02-ac6d-ea3a50f62977');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -44,6 +44,11 @@ export function PlanesPage() {
   }, [statusParam]);
 
   const handlePagarConMercadoPago = async (planCodigo: 'plata' | 'oro') => {
+    if (!accessToken) {
+      setMensajeError('No se encontró una sesión activa. Por favor iniciá sesión en /login primero.');
+      return;
+    }
+
     if (!negocioId.trim()) {
       setMensajeError('Por favor ingresá un ID de negocio válido para asociar el plan');
       return;
@@ -60,6 +65,11 @@ export function PlanesPage() {
           negocioId: negocioId.trim(),
           planCodigo,
           periodoMeses: 1,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
       );
 
@@ -120,7 +130,27 @@ export function PlanesPage() {
           <p className="mt-3 max-w-2xl mx-auto text-base text-slate-600">
             Precios justos y transparentes pensados para apoyar al comercio y prestador local.
           </p>
+
+          {/* Estado de Sesión */}
+          <div className="mt-4 flex justify-center">
+            {user && accessToken ? (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>
+                  Sesión activa: <strong>{user.nombre}</strong> ({user.email}) — Rol: <strong>{user.rol}</strong>
+                </span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+                <span>⚠️ No estás logueado.</span>
+                <a href="/login" className="font-bold underline hover:text-amber-950">
+                  Iniciar sesión aquí
+                </a>
+              </div>
+            )}
+          </div>
         </div>
+
 
         {/* Input de Negocio para Pruebas */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-8 max-w-xl mx-auto">
@@ -349,3 +379,4 @@ export function PlanesPage() {
     </div>
   );
 }
+
