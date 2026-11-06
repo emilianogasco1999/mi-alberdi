@@ -170,6 +170,42 @@ async function main() {
   }
   console.log('✅ 3/5 Métodos de pago sincronizados.');
 
+  // 3.1 Códigos Promocionales de Lanzamiento
+  const promos = [
+    {
+      codigo: 'ALBERDI-ORO-2026',
+      descripcion: 'Lanzamiento Mi Alberdi - 30 días de Plan Oro Bonificado',
+      planOtorgado: 'oro' as CodigoPlan,
+      diasVigencia: 30,
+      usosMaximos: 100,
+    },
+    {
+      codigo: 'ALBERDI-PLATA-2026',
+      descripcion: 'Lanzamiento Mi Alberdi - 30 días de Plan Plata Bonificado',
+      planOtorgado: 'plata' as CodigoPlan,
+      diasVigencia: 30,
+      usosMaximos: 100,
+    },
+  ];
+
+  for (const promo of promos) {
+    await prisma.codigoPromocional.upsert({
+      where: { codigo: promo.codigo },
+      update: {
+        descripcion: promo.descripcion,
+        planOtorgado: promo.planOtorgado,
+        diasVigencia: promo.diasVigencia,
+        usosMaximos: promo.usosMaximos,
+        activo: true,
+      },
+      create: {
+        ...promo,
+        activo: true,
+      },
+    });
+  }
+  console.log('✅ 3.1 Códigos promocionales sincronizados.');
+
   // 4. Rubros / Grupos y Categorías iniciales de Juan Bautista Alberdi
   const rubrosData: Array<{
     slug: string;
