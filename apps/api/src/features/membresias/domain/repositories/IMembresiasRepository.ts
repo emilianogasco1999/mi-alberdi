@@ -6,6 +6,7 @@ import type {
   MembresiaDTO,
   PagoMembresiaDTO,
   EstadoMembresiaNegocioDTO,
+  PreferenciaMpResponseDTO,
 } from '@mi-alberdi/shared';
 
 export interface IMembresiasRepository {
@@ -73,5 +74,17 @@ export interface IMembresiasRepository {
 
   ejecutarVencimientoMembresias(): Promise<{ membresiasVencidas: number }>;
 
-}
+  crearPreferenciaMercadoPago(params: {
+    negocioId: string;
+    usuarioId: string;
+    planCodigo: CodigoPlan;
+    meses: number;
+    emailComprador?: string;
+  }): Promise<PreferenciaMpResponseDTO>;
 
+  procesarPagoMercadoPago(params: {
+    pagoId: string;
+    estadoMp: 'approved' | 'rejected' | 'pending';
+    metadata?: Record<string, unknown>;
+  }): Promise<PagoMembresiaDTO>;
+}

@@ -21,7 +21,8 @@ export const membresiasMessages = {
   },
   registrarPagoTransferenciaSuccess: {
     statusCode: 201,
-    message: 'Comprobante de transferencia registrado exitosamente. En breve será verificado por el equipo de Mi Alberdi.',
+    message:
+      'Comprobante de transferencia registrado exitosamente. En breve será verificado por el equipo de Mi Alberdi.',
   },
   revisarPagoSuccess: {
     statusCode: 200,
@@ -35,6 +36,16 @@ export const membresiasMessages = {
     statusCode: 200,
     message: 'Historial de pagos obtenido exitosamente',
   },
+  crearCheckoutSuccess: {
+    statusCode: 201,
+    message: 'Preferencia de Mercado Pago generada exitosamente',
+  },
+  webhookProcessedSuccess: {
+    statusCode: 200,
+    message: 'Webhook recibido y procesado',
+  },
+  simularPagoSuccess: {
+    statusCode: 200,
+    message: 'Pago simulado en modo sandbox procesado exitosamente',
+  },
 } as const;
-
-

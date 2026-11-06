@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import {
   canjearCodigoPromoSchema,
+  crearPreferenciaMpSchema,
   registrarPagoTransferenciaSchema,
   revisarPagoManualSchema,
+  simularWebhookMpSchema,
   solicitarCambioPlanSchema,
 } from '@mi-alberdi/shared';
 import { catchedAsync } from '@core/presentation/utils/catchedAsync.js';
@@ -44,14 +46,33 @@ export const MembresiasRoutes = (): Router => {
     catchedAsync(controller.registrarPagoTransferencia),
   );
 
-  // 6. Historial de pagos de un negocio (autenticado para el dueño o admin)
+  // 6. Pasarela Mercado Pago: Crear Checkout / Preferencia
+  router.post(
+    '/pagos/mercadopago/checkout',
+    authMiddleware,
+    validateRequest(crearPreferenciaMpSchema),
+    catchedAsync(controller.crearCheckoutMp),
+  );
+
+  // 7. Webhook de Mercado Pago (público para recepción de eventos de MP)
+  router.post('/pagos/webhook/mercadopago', catchedAsync(controller.webhookMp));
+  router.get('/pagos/webhook/mercadopago', catchedAsync(controller.webhookMp));
+
+  // 8. Simulador Sandbox (para tests de desarrollo sin túnel ngrok)
+  router.post(
+    '/pagos/sandbox/simular',
+    validateRequest(simularWebhookMpSchema),
+    catchedAsync(controller.simularPagoSandbox),
+  );
+
+  // 9. Historial de pagos de un negocio (autenticado para el dueño o admin)
   router.get(
     '/pagos/negocio/:negocioId',
     authMiddleware,
     catchedAsync(controller.getHistorialPagosNegocio),
   );
 
-  // 7. Rutas de administración
+  // 10. Rutas de administración
   router.get('/admin/pagos', authMiddleware, catchedAsync(controller.getPagosAdmin));
 
   router.post(
@@ -69,4 +90,3 @@ export const MembresiasRoutes = (): Router => {
 
   return router;
 };
-

@@ -144,6 +144,10 @@ Con precios accesibles (\$1.500 y \$2.500 ARS) pensados como un "impulso/ayuda" 
    - Copiar `planes_catalogo.caracteristicas_base`, `prioridad_base`, `cupos_destacados` y `max_sucursales` en `negocios` al activarse o renovarse una membresía. Las lecturas públicas leen directo de `negocios` sin hacer joins con tablas de facturación.
 2. **Flexibilidad en métodos de pago locales (`pagos_membresia`):**
    - Soportar `pasarela = 'mercadopago'`, `'transferencia_manual'` (con `comprobante_url` para transferencias directas por alias en Alberdi) y `'promo'` (`codigos_promocionales`).
+   - **Estrategia dual de cobro en Mercado Pago:**
+     - **Pago Único / Prepago (Checkout Pro):** El comerciante abona 1 período puntual ($1.500 o $2.500 ARS) con tarjeta, débito o dinero en cuenta sin recurrencia forzada (`auto_renovar = false`). Al expirar `fecha_fin`, el cron degrada ordenadamente a Gratis.
+     - **Débito Automático Recurrente (`preapproval` / Suscripción mensual):** El comerciante activa `auto_renovar = true` (toggle en UI del checkout). Mercado Pago descuenta automáticamente cada mes y dispara el webhook `payment.created` -> el backend extiende `fecha_fin = fecha_fin + 30 días` automáticamente.
+     - **Requisito para UI Frontend:** En el formulario de checkout / planes, siempre incluir el switch/checkbox de `auto_renovar` (por defecto false para mayor confianza inicial del comerciante) para permitirle elegir entre pago único o suscripción mensual automática.
 3. **Horario cortado por la siesta (`horarios_negocio`):**
    - Soportar turnos de mañana (`apertura_manana`/`cierre_manana`) y tarde (`apertura_tarde`/`cierre_tarde`) respetando la costumbre comercial de Alberdi, además del flag `horario_corrido` y horario específico por sucursal (`ubicacion_id`).
 4. **Cascada de resolución de WhatsApp:**

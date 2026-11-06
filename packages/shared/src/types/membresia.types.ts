@@ -1,9 +1,4 @@
-import type {
-  CodigoPlan,
-  EstadoMembresia,
-  EstadoPago,
-  PasarelaPago,
-} from '../constants/domain.js';
+import type { CodigoPlan, EstadoMembresia, EstadoPago, PasarelaPago } from '../constants/domain.js';
 import type {
   CanjearCodigoPromoInput,
   CrearCodigoPromocionalInput,
@@ -12,6 +7,8 @@ import type {
   RegistrarPagoTransferenciaInput,
   RevisarPagoManualInput,
   SolicitarCambioPlanInput,
+  CrearPreferenciaMpInput,
+  SimularWebhookMpInput,
 } from '../schemas/membresia.schema.js';
 
 export type {
@@ -22,6 +19,8 @@ export type {
   RegistrarPagoTransferenciaInput,
   RevisarPagoManualInput,
   SolicitarCambioPlanInput,
+  CrearPreferenciaMpInput,
+  SimularWebhookMpInput,
 };
 
 export interface PlanCatalogoDTO {
@@ -106,3 +105,12 @@ export interface EstadoMembresiaNegocioDTO {
   membresiaActiva: MembresiaDTO | null;
 }
 
+export interface PreferenciaMpResponseDTO {
+  preferenceId: string;
+  initPoint: string;
+  sandboxInitPoint: string;
+  pagoId: string;
+  montoArs: number;
+  planCodigo: CodigoPlan;
+  modoSandbox: boolean;
+}
