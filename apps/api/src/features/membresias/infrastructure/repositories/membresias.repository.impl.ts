@@ -6,10 +6,13 @@ import type {
   MembresiaDTO,
   PagoMembresiaDTO,
   EstadoMembresiaNegocioDTO,
+  PreferenciaMpResponseDTO,
 } from '@mi-alberdi/shared';
 import type { IMembresiasRepository } from '../../domain/repositories/IMembresiasRepository.js';
+import { MercadoPagoService } from '../services/mercadopago.service.js';
 
 export class MembresiasRepositoryImpl implements IMembresiasRepository {
+  private readonly mpService = new MercadoPagoService();
   async getPlanesCatalogo(): Promise<PlanCatalogoDTO[]> {
     const planes = await prisma.planCatalogo.findMany({
       where: { activo: true },
@@ -685,7 +688,6 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
     };
   }
 
-
   async ejecutarVencimientoMembresias(): Promise<{ membresiasVencidas: number }> {
     const ahora = new Date();
 
@@ -739,6 +741,233 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
     });
 
     return { membresiasVencidas: vencidas.length };
+  }
+
+  async crearPreferenciaMercadoPago(params: {
+    negocioId: string;
+    usuarioId: string;
+    planCodigo: CodigoPlan;
+    meses: number;
+    emailComprador?: string;
+  }): Promise<PreferenciaMpResponseDTO> {
+    const plan = await prisma.planCatalogo.findUnique({
+      where: { codigo: params.planCodigo },
+    });
+
+    if (!plan || !plan.activo) {
+      throw NotFoundError('El plan seleccionado no está disponible');
+    }
+
+    const ahora = new Date();
+    const diasDuracion = params.meses * 30;
+    const fechaFinProvisoria = new Date(ahora.getTime() + diasDuracion * 24 * 60 * 60 * 1000);
+    const montoArs = Number(plan.precioMensualArs) * params.meses;
+
+    // 1. Crear membresía provisional (inactiva / vencida) y pago pendiente
+    const { membresia, pago } = await prisma.$transaction(async (tx) => {
+      const nuevaMembresia = await tx.membresia.create({
+        data: {
+          negocioId: params.negocioId,
+          planCodigo: params.planCodigo,
+          estado: 'vencida', // inactiva hasta que MP notifique pago aprobado
+          fechaInicio: ahora,
+          fechaFin: fechaFinProvisoria,
+          autoRenovar: false,
+          esPrueba: false,
+        },
+      });
+
+      const nuevoPago = await tx.pagoMembresia.create({
+        data: {
+          membresiaId: nuevaMembresia.id,
+          negocioId: params.negocioId,
+          usuarioId: params.usuarioId,
+          montoArs,
+          pasarela: 'mercadopago',
+          estado: 'pendiente',
+        },
+      });
+
+      return { membresia: nuevaMembresia, pago: nuevoPago };
+    });
+
+    // 2. Generar preferencia con Mercado Pago
+    const prefResult = await this.mpService.crearPreferencia({
+      pagoId: pago.id,
+      negocioId: params.negocioId,
+      nombrePlan: plan.nombre,
+      montoArs,
+      meses: params.meses,
+      emailComprador: params.emailComprador,
+    });
+
+    // 3. Guardar el ID de preferencia como referencia externa
+    await prisma.pagoMembresia.update({
+      where: { id: pago.id },
+      data: {
+        referenciaExterna: prefResult.preferenceId,
+        metadataPasarela: {
+          preferenceId: prefResult.preferenceId,
+          initPoint: prefResult.initPoint,
+          sandboxInitPoint: prefResult.sandboxInitPoint,
+          modoSandbox: prefResult.modoSandbox,
+        },
+      },
+    });
+
+    return {
+      preferenceId: prefResult.preferenceId,
+      initPoint: prefResult.initPoint,
+      sandboxInitPoint: prefResult.sandboxInitPoint,
+      pagoId: pago.id,
+      montoArs,
+      planCodigo: params.planCodigo,
+      modoSandbox: prefResult.modoSandbox,
+    };
+  }
+
+  async procesarPagoMercadoPago(params: {
+    pagoId: string;
+    estadoMp: 'approved' | 'rejected' | 'pending';
+    metadata?: Record<string, unknown>;
+  }): Promise<PagoMembresiaDTO> {
+    return prisma.$transaction(async (tx) => {
+      const pago = await tx.pagoMembresia.findUnique({
+        where: { id: params.pagoId },
+        include: { membresia: true, negocio: true },
+      });
+
+      if (!pago) {
+        throw NotFoundError(`Pago con ID ${params.pagoId} no encontrado`);
+      }
+
+      // Si ya fue aprobado previamente, devolvemos el estado idempotente
+      if (pago.estado === 'aprobado') {
+        return {
+          id: pago.id,
+          membresiaId: pago.membresiaId,
+          negocioId: pago.negocioId,
+          usuarioId: pago.usuarioId,
+          montoArs: Number(pago.montoArs),
+          pasarela: pago.pasarela,
+          referenciaExterna: pago.referenciaExterna,
+          estado: pago.estado as any,
+          comprobanteUrl: pago.comprobanteUrl,
+          metadataPasarela: (pago.metadataPasarela as Record<string, unknown>) ?? null,
+          pagadoEn: pago.pagadoEn ? pago.pagadoEn.toISOString() : null,
+          creadoEn: pago.creadoEn.toISOString(),
+          actualizadoEn: pago.actualizadoEn.toISOString(),
+          negocioNombre: pago.negocio.nombreComercial,
+        };
+      }
+
+      const ahora = new Date();
+
+      if (params.estadoMp === 'approved') {
+        const fechaFin = new Date(ahora.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        // Actualizar pago a aprobado
+        const pagoActualizado = await tx.pagoMembresia.update({
+          where: { id: params.pagoId },
+          data: {
+            estado: 'aprobado',
+            pagadoEn: ahora,
+            metadataPasarela: {
+              ...((pago.metadataPasarela as object) || {}),
+              ...(params.metadata || {}),
+              aprobadoPorWebhook: true,
+            } as any,
+          },
+        });
+
+        // Activar membresía
+        await tx.membresia.update({
+          where: { id: pago.membresiaId },
+          data: {
+            estado: 'activa',
+            fechaInicio: ahora,
+            fechaFin,
+          },
+        });
+
+        // Actualizar negocio: trigger PostgreSQL sincroniza entitlements y cupos
+        await tx.negocio.update({
+          where: { id: pago.negocioId },
+          data: {
+            planActual: pago.membresia.planCodigo,
+            planVenceEn: fechaFin,
+          },
+        });
+
+        return {
+          id: pagoActualizado.id,
+          membresiaId: pagoActualizado.membresiaId,
+          negocioId: pagoActualizado.negocioId,
+          usuarioId: pagoActualizado.usuarioId,
+          montoArs: Number(pagoActualizado.montoArs),
+          pasarela: pagoActualizado.pasarela,
+          referenciaExterna: pagoActualizado.referenciaExterna,
+          estado: pagoActualizado.estado as any,
+          comprobanteUrl: pagoActualizado.comprobanteUrl,
+          metadataPasarela: (pagoActualizado.metadataPasarela as Record<string, unknown>) ?? null,
+          pagadoEn: ahora.toISOString(),
+          creadoEn: pagoActualizado.creadoEn.toISOString(),
+          actualizadoEn: pagoActualizado.actualizadoEn.toISOString(),
+          negocioNombre: pago.negocio.nombreComercial,
+        };
+      } else if (params.estadoMp === 'rejected') {
+        const pagoRechazado = await tx.pagoMembresia.update({
+          where: { id: params.pagoId },
+          data: {
+            estado: 'rechazado',
+            metadataPasarela: {
+              ...((pago.metadataPasarela as object) || {}),
+              ...(params.metadata || {}),
+            } as any,
+          },
+        });
+
+        await tx.membresia.update({
+          where: { id: pago.membresiaId },
+          data: { estado: 'cancelada' },
+        });
+
+        return {
+          id: pagoRechazado.id,
+          membresiaId: pagoRechazado.membresiaId,
+          negocioId: pagoRechazado.negocioId,
+          usuarioId: pagoRechazado.usuarioId,
+          montoArs: Number(pagoRechazado.montoArs),
+          pasarela: pagoRechazado.pasarela,
+          referenciaExterna: pagoRechazado.referenciaExterna,
+          estado: pagoRechazado.estado as any,
+          comprobanteUrl: pagoRechazado.comprobanteUrl,
+          metadataPasarela: (pagoRechazado.metadataPasarela as Record<string, unknown>) ?? null,
+          pagadoEn: null,
+          creadoEn: pagoRechazado.creadoEn.toISOString(),
+          actualizadoEn: pagoRechazado.actualizadoEn.toISOString(),
+          negocioNombre: pago.negocio.nombreComercial,
+        };
+      } else {
+        // Pending
+        return {
+          id: pago.id,
+          membresiaId: pago.membresiaId,
+          negocioId: pago.negocioId,
+          usuarioId: pago.usuarioId,
+          montoArs: Number(pago.montoArs),
+          pasarela: pago.pasarela,
+          referenciaExterna: pago.referenciaExterna,
+          estado: pago.estado as any,
+          comprobanteUrl: pago.comprobanteUrl,
+          metadataPasarela: (pago.metadataPasarela as Record<string, unknown>) ?? null,
+          pagadoEn: null,
+          creadoEn: pago.creadoEn.toISOString(),
+          actualizadoEn: pago.actualizadoEn.toISOString(),
+          negocioNombre: pago.negocio.nombreComercial,
+        };
+      }
+    });
   }
 }
 

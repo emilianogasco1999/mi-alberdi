@@ -15,6 +15,7 @@ import { NegociosRoutes } from '@features/negocios/presentation/routes/negocios.
 import { CatalogoRoutes } from '@features/catalogo/presentation/routes/catalogo.routes.js';
 import { DescubrimientoRoutes } from '@features/descubrimiento/presentation/routes/descubrimiento.routes.js';
 import { MembresiasRoutes } from '@features/membresias/presentation/routes/membresias.routes.js';
+import { AnaliticaRoutes } from '@features/analitica/presentation/routes/analitica.routes.js';
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use('/api/negocios', NegociosRoutes());
 app.use('/api/catalogo', CatalogoRoutes());
 app.use('/api/descubrimiento', DescubrimientoRoutes());
 app.use('/api/membresias', MembresiasRoutes());
+app.use('/api/analitica', AnaliticaRoutes());
 
 // Manejador centralizado de errores
 app.use(errorHandler);

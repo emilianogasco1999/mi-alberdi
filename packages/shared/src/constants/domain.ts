@@ -217,3 +217,25 @@ export const PASARELAS_PAGO_VALUES = [
 
 export type PasarelaPago = (typeof PASARELAS_PAGO)[keyof typeof PASARELAS_PAGO];
 
+export const TIPOS_EVENTO_ANALITICA = {
+  VISTA_NEGOCIO: 'vista_negocio',
+  VISTA_PUBLICACION: 'vista_publicacion',
+  CLIC_WHATSAPP: 'clic_whatsapp',
+  CLIC_TELEFONO: 'clic_telefono',
+  CLIC_RED_SOCIAL: 'clic_red_social',
+  ESCANEO_QR: 'escaneo_qr',
+  VISTA_REEL: 'vista_reel',
+} as const;
+
+export const TIPOS_EVENTO_ANALITICA_VALUES = [
+  TIPOS_EVENTO_ANALITICA.VISTA_NEGOCIO,
+  TIPOS_EVENTO_ANALITICA.VISTA_PUBLICACION,
+  TIPOS_EVENTO_ANALITICA.CLIC_WHATSAPP,
+  TIPOS_EVENTO_ANALITICA.CLIC_TELEFONO,
+  TIPOS_EVENTO_ANALITICA.CLIC_RED_SOCIAL,
+  TIPOS_EVENTO_ANALITICA.ESCANEO_QR,
+  TIPOS_EVENTO_ANALITICA.VISTA_REEL,
+] as const;
+
+export type TipoEventoAnalitica =
+  (typeof TIPOS_EVENTO_ANALITICA)[keyof typeof TIPOS_EVENTO_ANALITICA];
