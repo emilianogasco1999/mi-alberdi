@@ -6,7 +6,7 @@ Definir el sistema de diseño visual (Design System / UI Kit) de Mi Alberdi en F
 * Paleta de colores oficial: colores primarios, secundarios, estados (abierto/cerrado, verificado, advertencia, éxito) y escala de neutros en modo claro (Light Mode) con tokens semánticos.
 * Sistema tipográfico: jerarquía de títulos (H1 a H4), subtítulos, cuerpo de texto y etiquetas pequeñas optimizadas para legibilidad en móviles.
 * Componentes base: botones (estados default, hover, active, disabled), inputs de formulario, badges de verificación, tarjetas de comercios, chips de rubros y modales.
-* Grilla y espaciados base (Mobile-First 375px y Desktop 1440px).","Backlog","Urgent","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, design-system"
+* Grilla y espaciados base (Mobile-First 375px y Desktop 1440px).","Backlog","Urgent","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Portada Pública (Home), Buscador Predictivo y Carrusel de Rubros","### Objetivo
 Diseñar la pantalla de inicio (Home) de Mi Alberdi pensada para el vecino de Juan Bautista Alberdi, facilitando el descubrimiento rápido de comercios, oficios y servicios.
 
@@ -17,7 +17,7 @@ Diseñar la pantalla de inicio (Home) de Mi Alberdi pensada para el vecino de Ju
 * Sección curada 'Destacados de Alberdi' (comercios con planes Plata y Oro).
 * Carrusel superior de Reels/Historias del día con avatar de comercios y borde de estado activo.
 * Filtros rápidos visibles: 'Abierto ahora', 'Atiende a domicilio', 'Oficio verificado'.
-* Versiones Desktop (1440px) y Mobile (375px).","Backlog","Urgent","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, home"
+* Versiones Desktop (1440px) y Mobile (375px).","Backlog","Urgent","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Vista de Resultados de Búsqueda y Filtros Avanzados","### Objetivo
 Diseñar la experiencia de exploración y filtrado del catálogo cuando el vecino realiza una búsqueda o entra a un rubro específico.
 
@@ -25,7 +25,7 @@ Diseñar la experiencia de exploración y filtrado del catálogo cuando el vecin
 * Listado de tarjetas de comercios/oficios con distinción visual clara entre comercio con local a la calle y prestador de oficio a domicilio.
 * Badges visuales de estado: Abierto/Cerrado (contemplando horario cortado de siesta), 'Verificado', calificación en estrellas y distancia/barrio.
 * Barra de filtros laterales o drawer inferior en mobile: rubro, modalidad de atención (por turnos, por orden de llegada, a domicilio), medios de pago aceptados y rango de precios.
-* Estados de carga (skeletons) y estado vacío amigable ('No encontramos resultados para tu búsqueda').","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, search"
+* Estados de carga (skeletons) y estado vacío amigable ('No encontramos resultados para tu búsqueda').","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Mapa Interactivo de Comercios y Sucursales de Alberdi","### Objetivo
 Diseñar la interfaz de navegación geográfica de comercios sobre el mapa interactivo de la ciudad de Juan Bautista Alberdi.
 
@@ -33,7 +33,7 @@ Diseñar la interfaz de navegación geográfica de comercios sobre el mapa inter
 * Estilo visual del mapa con pines diferenciados: pines comunes vs pines destacados (Plata/Oro con isotipo o color distintivo).
 * Manejo de privacidad para oficios: el pin debe marcar la zona/barrio de cobertura sin ubicar el domicilio exacto de la vivienda del trabajador.
 * Ficha flotante / bottom sheet al tocar un pin: foto de fachada o logo, nombre comercial, rubro, si está abierto ahora y botón directo 'Llamar' o 'WhatsApp'.
-* Controles del mapa: centrar en mi ubicación, alternar entre vista lista y vista mapa.","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, mapa"
+* Controles del mapa: centrar en mi ubicación, alternar entre vista lista y vista mapa.","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Perfil Público de Comercio u Oficio (Página de Detalle)","### Objetivo
 Diseñar la página de aterrizaje pública y completa de un comercio, profesional u oficio (`/[slug]`), optimizada para conversión directa a WhatsApp.
 
@@ -43,7 +43,7 @@ Diseñar la página de aterrizaje pública y completa de un comercio, profesiona
 * Botón de Acción Principal (CTA) flotante y persistente: 'Contactar por WhatsApp' con selector de sucursal si corresponde.
 * Pestañas de contenido: Catálogo de Publicaciones (Productos y Servicios), Sucursales con mapa, Métodos de Pago aceptados y Reseñas de vecinos.
 * Generador de código QR para imprimir y colocar en la vidriera del negocio físico.
-* Versiones Mobile y Desktop.","Backlog","Urgent","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, perfil-publico"
+* Versiones Mobile y Desktop.","Backlog","Urgent","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Detalle de Publicación (Servicio o Producto) y Galería de Fotos","### Objetivo
 Diseñar la vista detallada de un producto o servicio específico perteneciente a un negocio u oficio.
 
@@ -52,7 +52,7 @@ Diseñar la vista detallada de un producto o servicio específico perteneciente 
 * Encabezado con título, etiqueta de precio o precio de referencia en ARS y modalidad de entrega (retiro en local, envío a domicilio, a convenir).
 * Descripción completa del servicio/producto y especificaciones.
 * Botón CTA directo: 'Pedir por WhatsApp' con mensaje contextual prellenado ('Hola, te vi en Mi Alberdi y quería consultar por [Título]').
-* Tarjeta vinculada del negocio propietario con botón para ver su perfil completo.","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, catalogo"
+* Tarjeta vinculada del negocio propietario con botón para ver su perfil completo.","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Visor Interactivo de Historias y Reels de 24h","### Objetivo
 Diseñar el componente y flujo de visualización de Historias y Reels comerciales de 24 horas estilo Instagram/TikTok adaptado a la web.
 
@@ -61,7 +61,7 @@ Diseñar el componente y flujo de visualización de Historias y Reels comerciale
 * Barras de progreso superiores segmentadas por cantidad de historias vigentes del comercio.
 * Cabecera con avatar del negocio, nombre, tiempo transcurrido (ej. 'hace 2 h') y botón de cierre.
 * Botón de interacción en la parte inferior: 'Consultar oferta por WhatsApp' o texto personalizado por el comerciante.
-* Gestos táctiles contemplados: tap izquierdo (atrás), tap derecho (adelante), mantener presionado (pausa).","Backlog","Medium","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, reels"
+* Gestos táctiles contemplados: tap izquierdo (atrás), tap derecho (adelante), mantener presionado (pausa).","Backlog","Medium","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Onboarding y Wizard de Registro de Negocio / Oficio","### Objetivo
 Diseñar el flujo paso a paso (Wizard) para que un comerciante o trabajador de oficio registre su actividad comercial sin fricción.
 
@@ -71,7 +71,7 @@ Diseñar el flujo paso a paso (Wizard) para que un comerciante o trabajador de o
 * Paso 3: Ubicación y privacidad (Configurar dirección exacta a la calle o marcar solo barrio/localidad para oficios que atienden en la casa del cliente).
 * Paso 4: Configuración de horarios de atención (horario continuo u horario cortado por siesta comercial alberdiana).
 * Paso 5: Selección de métodos de pago aceptados y carga de logo / foto de fachada.
-* Indicador visual de progreso claro (steps numerados) y diseño 100% responsivo.","Backlog","Urgent","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, onboarding"
+* Indicador visual de progreso claro (steps numerados) y diseño 100% responsivo.","Backlog","Urgent","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Panel Comerciante: Dashboard Principal y Resumen Operativo","### Objetivo
 Diseñar el panel de control privado (Dashboard) al que ingresa el dueño del comercio para administrar su presencia digital en Mi Alberdi.
 
@@ -79,7 +79,7 @@ Diseñar el panel de control privado (Dashboard) al que ingresa el dueño del co
 * Tarjeta de estado de membresía: plan actual (Gratis, Plata, Oro), días restantes de vigencia y botón para renovar o mejorar plan.
 * Accesos directos a acciones clave: 'Nueva publicación', 'Subir historia/reel', 'Editar horarios', 'Descargar QR de vidriera'.
 * Módulo de sugerencia de completitud de perfil (barra porcentual para incentivar al comerciante a subir fotos, horarios y datos de contacto).
-* Resumen de reseñas recientes pendientes de respuesta.","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, panel-comerciante"
+* Resumen de reseñas recientes pendientes de respuesta.","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Panel Comerciante: Gestión de Catálogo y Estrellas de Vidriera","### Objetivo
 Diseñar la sección donde el comerciante administra sus productos y servicios y asigna sus cupos de publicaciones destacadas.
 
@@ -87,7 +87,7 @@ Diseñar la sección donde el comerciante administra sus productos y servicios y
 * Grilla / tabla interactiva de publicaciones con foto de portada, título, precio, categoría y estado (activa, pausada).
 * Contador visual de límites del plan: '2 de 10 publicaciones activas utilizadas'.
 * Interruptor o icono de estrella interactivo ('Estrellas de Vidriera'): muestra cuántas publicaciones destacadas tiene disponibles según su plan y permite encender/apagar cuáles van a portada.
-* Formulario modal o vista de carga/edición de publicación con carga múltiple de imágenes y previsualización en tiempo real.","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, catalogo"
+* Formulario modal o vista de carga/edición de publicación con carga múltiple de imágenes y previsualización en tiempo real.","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Panel Comerciante: Métrica y Retorno de Inversión (ROI)","### Objetivo
 Diseñar la pantalla de estadísticas que le demuestra al comerciante cuánto valor y clientes le está generando Mi Alberdi.
 
@@ -95,14 +95,14 @@ Diseñar la pantalla de estadísticas que le demuestra al comerciante cuánto va
 * Tarjetas de métricas clave (KPIs): Clics al WhatsApp, Escaneos del QR en vidriera, Visitas al perfil y Reproducciones de Historias.
 * Gráfico de línea o barras con evolución semanal/mensual.
 * Filtro selector por sucursal (para planes multi-sucursal Plata y Oro) y selector de período (últimos 7 días, 30 días, total).
-* Mensajes de impacto positivo orientados al comerciante (ej. 'Este mes 42 vecinos te contactaron directamente').","Backlog","Medium","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, analytics"
+* Mensajes de impacto positivo orientados al comerciante (ej. 'Este mes 42 vecinos te contactaron directamente').","Backlog","Medium","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Panel Comerciante: Gestión de Sucursales y Horarios de Siesta","### Objetivo
 Diseñar la interfaz de administración de sucursales para comercios con múltiples puntos de venta y configuración horaria avanzada.
 
 ### Puntos de Aceptación
 * Listado de sucursales del negocio: Casa Central y sucursales secundarias con su dirección, teléfono específico y estado activo según plan.
 * Formulario de alta/edición de sucursal con selector de ubicación en mapa interactivo para fijar el pin exacto.
-* Editor de horarios semanal intuitivo: switches por día (Lunes a Domingo), soporte de turno mañana (ej. 08:30 a 12:30) y turno tarde (ej. 17:00 a 21:00) o switch de horario corrido.","Backlog","Medium","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, sucursales"
+* Editor de horarios semanal intuitivo: switches por día (Lunes a Domingo), soporte de turno mañana (ej. 08:30 a 12:30) y turno tarde (ej. 17:00 a 21:00) o switch de horario corrido.","Backlog","Medium","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Pantalla de Planes, Comparativa de Beneficios y Checkout de Suscripción","### Objetivo
 Diseñar la experiencia comercial donde los dueños de negocios comparan los planes (Gratis, Plata, Oro) y eligen cómo pagar su membresía.
 
@@ -110,19 +110,18 @@ Diseñar la experiencia comercial donde los dueños de negocios comparan los pla
 * Comparativa clara de los 3 niveles: Vecino Gratis ($0), Comercio Plata ($1.500 ARS) e Impulso Oro ($2.500 ARS) destacando beneficios clave (más publicaciones, multi-sucursales, estrellas de vidriera, asistente IA, reels).
 * Switch o selector de modalidad: 'Pago Único' (mes prepago) vs 'Débito Automático Mensual' (suscripción recurrente con Mercado Pago).
 * Formulario de Checkout: integración con Mercado Pago y opción alternativa de 'Transferencia Bancaria Manual' (con datos de CBU/Alias y dropzone para adjuntar foto del comprobante).
-* Campo para ingresar código promocional bonificado.","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, membresias"
+* Campo para ingresar código promocional bonificado.","Backlog","High","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Módulo de Opiniones, Reseñas y Respuesta del Comerciante","### Objetivo
 Diseñar el sistema de valoración y reputación local entre vecinos y comerciantes.
 
 ### Puntos de Aceptación
 * Formulario de reseña para el vecino: selector de estrellas (1 a 5), campo de comentario de texto y opción de adjuntar foto como evidencia del servicio/compra recibida.
 * Tarjeta de opinión pública mostrando autor, fecha, estrellas, texto, foto y respuesta oficial del comerciante destacada debajo.
-* Vista en el panel del comerciante para moderar o responder cordialmente a las reseñas recibidas.","Backlog","Medium","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, opiniones"
+* Vista en el panel del comerciante para moderar o responder cordialmente a las reseñas recibidas.","Backlog","Medium","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
 "PowerLink Technology","[DISEÑO][Mi Alberdi] Backoffice de Administración: Verificaciones, Pagos y Moderación","### Objetivo
 Diseñar el panel interno de administración exclusivo para moderadores y administradores de la plataforma Mi Alberdi.
 
 ### Puntos de Aceptación
 * Bandeja de revisión de pagos manuales por transferencia: listado de comprobantes adjuntos, datos del comerciante y botones 'Aprobar' o 'Rechazar con motivo'.
 * Bandeja de solicitudes de verificación: revisión de fotos de DNI / habilitación comercial / matrícula profesional para otorgar el badge verificado.
-* Módulo de reportes y denuncias de usuarios (publicaciones o reseñas inapropiadas) con opciones de pausar, desestimar o sancionar.","Backlog","Medium","Mi Alberdi","lukas_1999@hotmail.com.ar","diseño, ui, admin"
-
+* Módulo de reportes y denuncias de usuarios (publicaciones o reseñas inapropiadas) con opciones de pausar, desestimar o sancionar.","Backlog","Medium","Mi Alberdi","lukas_1999@hotmail.com.ar","Diseño"
