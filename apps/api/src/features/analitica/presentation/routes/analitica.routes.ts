@@ -34,3 +34,4 @@ export const AnaliticaRoutes = (): Router => {
 
   return router;
 };
+

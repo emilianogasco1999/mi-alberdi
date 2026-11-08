@@ -12,3 +12,4 @@ export const analiticaMessages = {
     message: 'Métricas de analítica obtenidas exitosamente',
   },
 } as const;
+

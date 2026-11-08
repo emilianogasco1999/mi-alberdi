@@ -30,3 +30,4 @@ export interface IAnaliticaRepository {
   registrarEventosBatch(eventos: RegistrarEventoData[]): Promise<{ count: number }>;
   getMetricasNegocio(params: GetMetricasParams): Promise<MetricasNegocioResponseDTO>;
 }
+

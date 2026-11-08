@@ -22,3 +22,4 @@ export class RegistrarEventosBatchUseCase {
     return this.repository.registrarEventosBatch(input.eventos);
   }
 }
+

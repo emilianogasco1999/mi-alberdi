@@ -239,4 +239,3 @@ export const TIPOS_EVENTO_ANALITICA_VALUES = [
 
 export type TipoEventoAnalitica =
   (typeof TIPOS_EVENTO_ANALITICA)[keyof typeof TIPOS_EVENTO_ANALITICA];
-

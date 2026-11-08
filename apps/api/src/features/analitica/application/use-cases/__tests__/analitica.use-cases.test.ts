@@ -250,3 +250,4 @@ describe('POW-29: Analítica Use Cases', () => {
     });
   });
 });
+

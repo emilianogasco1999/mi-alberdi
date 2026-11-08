@@ -15,8 +15,18 @@ export const registrarEventoSchema = z.object({
   ubicacionId: z.string().uuid('ID de ubicación inválido').optional().nullable(),
   reelId: z.string().uuid('ID de reel inválido').optional().nullable(),
   tipoEvento: tipoEventoAnaliticaSchema,
-  origen: z.string().trim().max(40, 'El origen no puede superar los 40 caracteres').optional().nullable(),
-  dispositivoHash: z.string().trim().max(128, 'El hash del dispositivo no puede superar 128 caracteres').optional().nullable(),
+  origen: z
+    .string()
+    .trim()
+    .max(40, 'El origen no puede superar los 40 caracteres')
+    .optional()
+    .nullable(),
+  dispositivoHash: z
+    .string()
+    .trim()
+    .max(128, 'El hash del dispositivo no puede superar 128 caracteres')
+    .optional()
+    .nullable(),
 });
 
 export type RegistrarEventoInput = z.infer<typeof registrarEventoSchema>;
@@ -34,7 +44,14 @@ export type RegistrarEventosBatchInput = z.infer<typeof registrarEventosBatchSch
 // CONSULTA DE MÉTRICAS (DASHBOARD COMERCIANTE)
 // =============================================================================
 
-export const PERIODOS_METRICAS = ['7d', '30d', '90d', 'mes_actual', 'anio_actual', 'historico'] as const;
+export const PERIODOS_METRICAS = [
+  '7d',
+  '30d',
+  '90d',
+  'mes_actual',
+  'anio_actual',
+  'historico',
+] as const;
 export type PeriodoMetricas = (typeof PERIODOS_METRICAS)[number];
 
 export const queryMetricasNegocioSchema = z.object({

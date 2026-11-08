@@ -162,3 +162,4 @@
  *       404:
  *         description: Negocio no encontrado
  */
+

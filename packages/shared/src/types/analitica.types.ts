@@ -66,3 +66,4 @@ export interface MetricasNegocioResponseDTO {
   serieTemporal: MetricasPuntoTemporalDTO[];
   topPublicaciones: MetricasTopPublicacionDTO[];
 }
+
