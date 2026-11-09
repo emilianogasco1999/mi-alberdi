@@ -4,6 +4,7 @@ import type {
   ListadoOpinionesResponseDTO,
   OpinionDTO,
   QueryOpinionesNegocioInput,
+  UpdateOpinionInput,
 } from '@mi-alberdi/shared';
 import type {
   CreateOpinionData,
@@ -163,6 +164,49 @@ export class OpinionesRepositoryImpl implements IOpinionesRepository {
       });
 
       return this.mapToDTO(created, created.publicacion?.titulo);
+    });
+  }
+
+  async updateOpinion(id: string, data: UpdateOpinionInput): Promise<OpinionDTO> {
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.opinion.update({
+        where: { id },
+        data: {
+          ...(data.puntuacion !== undefined ? { puntuacion: data.puntuacion } : {}),
+          ...(data.comentario !== undefined ? { comentario: data.comentario } : {}),
+          ...(data.fotoEvidenciaUrl !== undefined
+            ? { fotoEvidenciaUrl: data.fotoEvidenciaUrl }
+            : {}),
+        },
+        include: {
+          publicacion: { select: { titulo: true } },
+        },
+      });
+
+      if (data.puntuacion !== undefined) {
+        const aggregate = await tx.opinion.aggregate({
+          where: {
+            negocioId: updated.negocioId,
+            visible: true,
+          },
+          _avg: { puntuacion: true },
+          _count: { id: true },
+        });
+
+        const ratingPromedio = Number((aggregate._avg.puntuacion ?? 0).toFixed(2));
+        const totalOpiniones = aggregate._count.id;
+
+        await tx.negocio.update({
+          where: { id: updated.negocioId },
+          data: {
+            ratingPromedio,
+            totalOpiniones,
+            ultimaActividadEn: new Date(),
+          },
+        });
+      }
+
+      return this.mapToDTO(updated, updated.publicacion?.titulo);
     });
   }
 

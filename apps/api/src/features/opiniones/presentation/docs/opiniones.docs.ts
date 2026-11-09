@@ -208,6 +208,53 @@
 /**
  * @openapi
  * /api/opiniones/{id}:
+ *   put:
+ *     summary: Editar una opinión propia
+ *     description: Permite al autor de la reseña actualizar su puntuación, comentario o foto de evidencia. Si cambia la puntuación, se recalcula automáticamente el rating promedio del comercio.
+ *     tags: [Opiniones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               puntuacion:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 example: 5
+ *               comentario:
+ *                 type: string
+ *                 maxLength: 1000
+ *                 example: "Modifico mi reseña, resolvieron el inconveniente de inmediato."
+ *               fotoEvidenciaUrl:
+ *                 type: string
+ *                 format: uri
+ *                 nullable: true
+ *     responses:
+ *       200:
+ *         description: Opinión actualizada exitosamente
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Solo el autor puede editar su opinión
+ *       404:
+ *         description: Opinión no encontrada
+ */
+
+/**
+ * @openapi
+ * /api/opiniones/{id}:
  *   delete:
  *     summary: Eliminar una opinión
  *     description: Permite al autor de la opinión o a un moderador/admin eliminar la reseña y recalcular las métricas del comercio.

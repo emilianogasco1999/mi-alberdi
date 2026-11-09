@@ -3,6 +3,7 @@ import type {
   ListadoOpinionesResponseDTO,
   OpinionDTO,
   QueryOpinionesNegocioInput,
+  UpdateOpinionInput,
 } from '@mi-alberdi/shared';
 
 export interface NegocioMetadata {
@@ -35,6 +36,7 @@ export interface IOpinionesRepository {
     negocioId: string,
   ): Promise<OpinionDTO | null>;
   createOpinion(data: CreateOpinionData): Promise<OpinionDTO>;
+  updateOpinion(id: string, data: UpdateOpinionInput): Promise<OpinionDTO>;
   responderOpinion(id: string, respuesta: string): Promise<OpinionDTO>;
   eliminarRespuesta(id: string): Promise<OpinionDTO>;
   deleteOpinion(id: string, negocioId: string): Promise<void>;

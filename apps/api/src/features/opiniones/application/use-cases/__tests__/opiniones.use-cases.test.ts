@@ -6,6 +6,7 @@ import type {
   NegocioMetadata,
 } from '../../../domain/repositories/IOpinionesRepository.js';
 import { CreateOpinionUseCase } from '../create-opinion.use-case.js';
+import { UpdateOpinionUseCase } from '../update-opinion.use-case.js';
 import { ResponderOpinionUseCase } from '../responder-opinion.use-case.js';
 import { EliminarRespuestaComercianteUseCase } from '../eliminar-respuesta-comerciante.use-case.js';
 import { DeleteOpinionUseCase } from '../delete-opinion.use-case.js';
@@ -15,6 +16,7 @@ import type {
   ListadoOpinionesResponseDTO,
   OpinionDTO,
   QueryOpinionesNegocioInput,
+  UpdateOpinionInput,
 } from '@mi-alberdi/shared';
 
 class MockOpinionesRepository implements IOpinionesRepository {
@@ -82,6 +84,15 @@ class MockOpinionesRepository implements IOpinionesRepository {
     negocio.totalOpiniones += 1;
     negocio.ratingPromedio = 5.0; // Simplificado en mock
     return opinion;
+  }
+
+  async updateOpinion(id: string, data: UpdateOpinionInput): Promise<OpinionDTO> {
+    const op = this.opiniones.get(id)!;
+    if (data.puntuacion !== undefined) op.puntuacion = data.puntuacion;
+    if (data.comentario !== undefined) op.comentario = data.comentario;
+    if (data.fotoEvidenciaUrl !== undefined) op.fotoEvidenciaUrl = data.fotoEvidenciaUrl;
+    op.actualizadoEn = new Date().toISOString();
+    return op;
   }
 
   async responderOpinion(id: string, respuesta: string): Promise<OpinionDTO> {
@@ -240,6 +251,50 @@ describe('POW-33: Opiniones Use Cases', () => {
           });
         },
         { name: 'ValidationError' },
+      );
+    });
+  });
+
+  describe('UpdateOpinionUseCase', () => {
+    it('debe permitir al autor actualizar su calificación y comentario', async () => {
+      const { repo, negocioId } = setup();
+      const createUseCase = new CreateOpinionUseCase(repo);
+      const updateUseCase = new UpdateOpinionUseCase(repo);
+
+      const op = await createUseCase.execute('vecino-uuid-1', {
+        negocioId,
+        nombreAutorVisible: 'Carlos',
+        puntuacion: 2,
+        comentario: 'Tardaron mucho',
+      });
+
+      const updated = await updateUseCase.execute(op.id, 'vecino-uuid-1', {
+        puntuacion: 5,
+        comentario: 'El dueño solucionó el problema, excelente trato.',
+      });
+
+      assert.equal(updated.puntuacion, 5);
+      assert.equal(updated.comentario, 'El dueño solucionó el problema, excelente trato.');
+    });
+
+    it('debe rechazar si otro usuario intenta editar la opinión', async () => {
+      const { repo, negocioId } = setup();
+      const createUseCase = new CreateOpinionUseCase(repo);
+      const updateUseCase = new UpdateOpinionUseCase(repo);
+
+      const op = await createUseCase.execute('vecino-uuid-1', {
+        negocioId,
+        nombreAutorVisible: 'Carlos',
+        puntuacion: 4,
+      });
+
+      await assert.rejects(
+        async () => {
+          await updateUseCase.execute(op.id, 'otro-usuario', {
+            puntuacion: 5,
+          });
+        },
+        { name: 'ForbiddenError' },
       );
     });
   });

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createOpinionSchema,
   responderOpinionSchema,
+  updateOpinionSchema,
 } from '@mi-alberdi/shared';
 import { catchedAsync } from '@core/presentation/utils/catchedAsync.js';
 import { authMiddleware } from '@core/presentation/middlewares/auth.middleware.js';
@@ -26,7 +27,15 @@ export const OpinionesRoutes = (): Router => {
     catchedAsync(controller.create),
   );
 
-  // 4. Responder opinión (comerciante dueño del negocio o admin)
+  // 4. Editar opinión (autor autenticado)
+  router.put(
+    '/:id',
+    authMiddleware,
+    validateRequest(updateOpinionSchema),
+    catchedAsync(controller.update),
+  );
+
+  // 5. Responder opinión (comerciante dueño del negocio o admin)
   router.patch(
     '/:id/respuesta',
     authMiddleware,

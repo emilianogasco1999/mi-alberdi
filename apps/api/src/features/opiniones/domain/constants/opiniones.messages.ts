@@ -3,6 +3,10 @@ export const opinionesMessages = {
     statusCode: 201,
     message: 'Opinión registrada exitosamente',
   },
+  updateSuccess: {
+    statusCode: 200,
+    message: 'Opinión actualizada exitosamente',
+  },
   responderSuccess: {
     statusCode: 200,
     message: 'Respuesta de comerciante publicada exitosamente',

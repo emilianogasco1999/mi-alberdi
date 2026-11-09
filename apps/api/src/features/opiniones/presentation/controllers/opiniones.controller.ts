@@ -5,6 +5,7 @@ import { queryOpinionesNegocioSchema } from '@mi-alberdi/shared';
 import { opinionesMessages } from '../../domain/constants/opiniones.messages.js';
 import { OpinionesRepositoryImpl } from '../../infrastructure/repositories/opiniones.repository.impl.js';
 import { CreateOpinionUseCase } from '../../application/use-cases/create-opinion.use-case.js';
+import { UpdateOpinionUseCase } from '../../application/use-cases/update-opinion.use-case.js';
 import { ResponderOpinionUseCase } from '../../application/use-cases/responder-opinion.use-case.js';
 import { EliminarRespuestaComercianteUseCase } from '../../application/use-cases/eliminar-respuesta-comerciante.use-case.js';
 import { GetOpinionesNegocioUseCase } from '../../application/use-cases/get-opiniones-negocio.use-case.js';
@@ -14,6 +15,7 @@ import { DeleteOpinionUseCase } from '../../application/use-cases/delete-opinion
 export class OpinionesController {
   private readonly repository = new OpinionesRepositoryImpl();
   private readonly createOpinionUseCase = new CreateOpinionUseCase(this.repository);
+  private readonly updateOpinionUseCase = new UpdateOpinionUseCase(this.repository);
   private readonly responderOpinionUseCase = new ResponderOpinionUseCase(this.repository);
   private readonly eliminarRespuestaUseCase = new EliminarRespuestaComercianteUseCase(this.repository);
   private readonly getOpinionesNegocioUseCase = new GetOpinionesNegocioUseCase(this.repository);
@@ -37,6 +39,28 @@ export class OpinionesController {
       res,
       opinionesMessages.createSuccess.statusCode,
       opinionesMessages.createSuccess.message,
+      result,
+    );
+  };
+
+  update = async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw UnauthorizedError('Debés iniciar sesión para editar tu opinión');
+    }
+
+    const param = req.params.id;
+    const opinionId = Array.isArray(param) ? param[0] : param;
+
+    const result = await this.updateOpinionUseCase.execute(
+      opinionId,
+      req.user.id,
+      req.body,
+    );
+
+    response(
+      res,
+      opinionesMessages.updateSuccess.statusCode,
+      opinionesMessages.updateSuccess.message,
       result,
     );
   };

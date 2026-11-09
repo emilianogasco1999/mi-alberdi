@@ -28,3 +28,4 @@ export class EliminarRespuestaComercianteUseCase {
     return this.repository.eliminarRespuesta(opinionId);
   }
 }
+
