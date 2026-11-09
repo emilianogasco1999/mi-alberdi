@@ -7,6 +7,10 @@ export const opinionesMessages = {
     statusCode: 200,
     message: 'Respuesta de comerciante publicada exitosamente',
   },
+  eliminarRespuestaSuccess: {
+    statusCode: 200,
+    message: 'Respuesta de comerciante eliminada exitosamente',
+  },
   getOpinionesSuccess: {
     statusCode: 200,
     message: 'Listado de opiniones obtenido exitosamente',

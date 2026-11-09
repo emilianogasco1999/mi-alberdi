@@ -6,6 +6,7 @@ import { opinionesMessages } from '../../domain/constants/opiniones.messages.js'
 import { OpinionesRepositoryImpl } from '../../infrastructure/repositories/opiniones.repository.impl.js';
 import { CreateOpinionUseCase } from '../../application/use-cases/create-opinion.use-case.js';
 import { ResponderOpinionUseCase } from '../../application/use-cases/responder-opinion.use-case.js';
+import { EliminarRespuestaComercianteUseCase } from '../../application/use-cases/eliminar-respuesta-comerciante.use-case.js';
 import { GetOpinionesNegocioUseCase } from '../../application/use-cases/get-opiniones-negocio.use-case.js';
 import { GetMiOpinionUseCase } from '../../application/use-cases/get-mi-opinion.use-case.js';
 import { DeleteOpinionUseCase } from '../../application/use-cases/delete-opinion.use-case.js';
@@ -14,6 +15,7 @@ export class OpinionesController {
   private readonly repository = new OpinionesRepositoryImpl();
   private readonly createOpinionUseCase = new CreateOpinionUseCase(this.repository);
   private readonly responderOpinionUseCase = new ResponderOpinionUseCase(this.repository);
+  private readonly eliminarRespuestaUseCase = new EliminarRespuestaComercianteUseCase(this.repository);
   private readonly getOpinionesNegocioUseCase = new GetOpinionesNegocioUseCase(this.repository);
   private readonly getMiOpinionUseCase = new GetMiOpinionUseCase(this.repository);
   private readonly deleteOpinionUseCase = new DeleteOpinionUseCase(this.repository);
@@ -58,6 +60,28 @@ export class OpinionesController {
       res,
       opinionesMessages.responderSuccess.statusCode,
       opinionesMessages.responderSuccess.message,
+      result,
+    );
+  };
+
+  eliminarRespuesta = async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw UnauthorizedError('Debés iniciar sesión para eliminar tu respuesta');
+    }
+
+    const param = req.params.id;
+    const opinionId = Array.isArray(param) ? param[0] : param;
+
+    const result = await this.eliminarRespuestaUseCase.execute(
+      opinionId,
+      req.user.id,
+      req.user.rol,
+    );
+
+    response(
+      res,
+      opinionesMessages.eliminarRespuestaSuccess.statusCode,
+      opinionesMessages.eliminarRespuestaSuccess.message,
       result,
     );
   };

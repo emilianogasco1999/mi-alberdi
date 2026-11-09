@@ -180,6 +180,33 @@
 
 /**
  * @openapi
+ * /api/opiniones/{id}/respuesta:
+ *   delete:
+ *     summary: Eliminar la respuesta del comerciante
+ *     description: Permite al dueño del negocio o a un admin remover la respuesta oficial emitida previamente, dejando la opinión del cliente intacta.
+ *     tags: [Opiniones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Respuesta eliminada exitosamente
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Solo el dueño del negocio puede eliminar esta respuesta
+ *       404:
+ *         description: Opinión no encontrada
+ */
+
+/**
+ * @openapi
  * /api/opiniones/{id}:
  *   delete:
  *     summary: Eliminar una opinión

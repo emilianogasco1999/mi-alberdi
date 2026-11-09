@@ -36,6 +36,7 @@ export interface IOpinionesRepository {
   ): Promise<OpinionDTO | null>;
   createOpinion(data: CreateOpinionData): Promise<OpinionDTO>;
   responderOpinion(id: string, respuesta: string): Promise<OpinionDTO>;
+  eliminarRespuesta(id: string): Promise<OpinionDTO>;
   deleteOpinion(id: string, negocioId: string): Promise<void>;
   getOpinionesNegocio(
     negocioId: string,

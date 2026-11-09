@@ -7,6 +7,7 @@ import type {
 } from '../../../domain/repositories/IOpinionesRepository.js';
 import { CreateOpinionUseCase } from '../create-opinion.use-case.js';
 import { ResponderOpinionUseCase } from '../responder-opinion.use-case.js';
+import { EliminarRespuestaComercianteUseCase } from '../eliminar-respuesta-comerciante.use-case.js';
 import { DeleteOpinionUseCase } from '../delete-opinion.use-case.js';
 import { GetMiOpinionUseCase } from '../get-mi-opinion.use-case.js';
 import { GetOpinionesNegocioUseCase } from '../get-opiniones-negocio.use-case.js';
@@ -87,6 +88,13 @@ class MockOpinionesRepository implements IOpinionesRepository {
     const op = this.opiniones.get(id)!;
     op.respuestaComerciante = respuesta;
     op.respondidoEn = new Date().toISOString();
+    return op;
+  }
+
+  async eliminarRespuesta(id: string): Promise<OpinionDTO> {
+    const op = this.opiniones.get(id)!;
+    op.respuestaComerciante = null;
+    op.respondidoEn = null;
     return op;
   }
 
@@ -281,6 +289,53 @@ describe('POW-33: Opiniones Use Cases', () => {
             'comerciante',
             { respuestaComerciante: 'Respuesta' },
           );
+        },
+        { name: 'ForbiddenError' },
+      );
+    });
+  });
+
+  describe('EliminarRespuestaComercianteUseCase', () => {
+    it('debe permitir al dueño del negocio eliminar su respuesta', async () => {
+      const { repo, negocioId, ownerId } = setup();
+      const createUseCase = new CreateOpinionUseCase(repo);
+      const responderUseCase = new ResponderOpinionUseCase(repo);
+      const eliminarRespuestaUseCase = new EliminarRespuestaComercianteUseCase(repo);
+
+      const op = await createUseCase.execute('vecino-uuid-1', {
+        negocioId,
+        nombreAutorVisible: 'Carlos',
+        puntuacion: 5,
+      });
+
+      await responderUseCase.execute(op.id, ownerId, 'comerciante', {
+        respuestaComerciante: 'Respuesta inicial',
+      });
+
+      const result = await eliminarRespuestaUseCase.execute(op.id, ownerId, 'comerciante');
+      assert.equal(result.respuestaComerciante, null);
+      assert.equal(result.respondidoEn, null);
+    });
+
+    it('debe rechazar si un tercero intenta eliminar la respuesta del comerciante', async () => {
+      const { repo, negocioId, ownerId } = setup();
+      const createUseCase = new CreateOpinionUseCase(repo);
+      const responderUseCase = new ResponderOpinionUseCase(repo);
+      const eliminarRespuestaUseCase = new EliminarRespuestaComercianteUseCase(repo);
+
+      const op = await createUseCase.execute('vecino-uuid-1', {
+        negocioId,
+        nombreAutorVisible: 'Carlos',
+        puntuacion: 5,
+      });
+
+      await responderUseCase.execute(op.id, ownerId, 'comerciante', {
+        respuestaComerciante: 'Respuesta inicial',
+      });
+
+      await assert.rejects(
+        async () => {
+          await eliminarRespuestaUseCase.execute(op.id, 'vecino-uuid-1', 'vecino');
         },
         { name: 'ForbiddenError' },
       );

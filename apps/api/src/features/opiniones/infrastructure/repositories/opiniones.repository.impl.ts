@@ -181,6 +181,21 @@ export class OpinionesRepositoryImpl implements IOpinionesRepository {
     return this.mapToDTO(updated, updated.publicacion?.titulo);
   }
 
+  async eliminarRespuesta(id: string): Promise<OpinionDTO> {
+    const updated = await prisma.opinion.update({
+      where: { id },
+      data: {
+        respuestaComerciante: null,
+        respondidoEn: null,
+      },
+      include: {
+        publicacion: { select: { titulo: true } },
+      },
+    });
+
+    return this.mapToDTO(updated, updated.publicacion?.titulo);
+  }
+
   async deleteOpinion(id: string, negocioId: string): Promise<void> {
     await prisma.$transaction(async (tx) => {
       await tx.opinion.delete({

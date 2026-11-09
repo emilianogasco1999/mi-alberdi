@@ -34,7 +34,14 @@ export const OpinionesRoutes = (): Router => {
     catchedAsync(controller.responder),
   );
 
-  // 5. Eliminar opinión (autor o admin/moderador)
+  // 5. Eliminar respuesta de comerciante (dueño del negocio o admin)
+  router.delete(
+    '/:id/respuesta',
+    authMiddleware,
+    catchedAsync(controller.eliminarRespuesta),
+  );
+
+  // 6. Eliminar opinión completa (autor o admin/moderador)
   router.delete('/:id', authMiddleware, catchedAsync(controller.delete));
 
   return router;
