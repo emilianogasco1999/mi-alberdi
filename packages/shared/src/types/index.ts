@@ -32,3 +32,4 @@ export * from './catalogo.types.js';
 export * from './descubrimiento.types.js';
 export * from './membresia.types.js';
 export * from './analitica.types.js';
+export * from './opinion.types.js';
