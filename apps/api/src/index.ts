@@ -17,6 +17,7 @@ import { DescubrimientoRoutes } from '@features/descubrimiento/presentation/rout
 import { MembresiasRoutes } from '@features/membresias/presentation/routes/membresias.routes.js';
 import { AnaliticaRoutes } from '@features/analitica/presentation/routes/analitica.routes.js';
 import { OpinionesRoutes } from '@features/opiniones/presentation/routes/opiniones.routes.js';
+import { ModeracionRoutes } from '@features/moderacion/presentation/routes/moderacion.routes.js';
 
 const app = express();
 
@@ -74,6 +75,7 @@ app.use('/api/descubrimiento', DescubrimientoRoutes());
 app.use('/api/membresias', MembresiasRoutes());
 app.use('/api/analitica', AnaliticaRoutes());
 app.use('/api/opiniones', OpinionesRoutes());
+app.use('/api/moderacion', ModeracionRoutes());
 
 // Manejador centralizado de errores
 app.use(errorHandler);
