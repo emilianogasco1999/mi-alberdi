@@ -17,7 +17,11 @@ export const OpinionesRoutes = (): Router => {
   router.get('/negocio/:negocioId', catchedAsync(controller.getOpinionesNegocio));
 
   // 2. Consulta de opinión propia por negocio
-  router.get('/negocio/:negocioId/mi-opinion', authMiddleware, catchedAsync(controller.getMiOpinion));
+  router.get(
+    '/negocio/:negocioId/mi-opinion',
+    authMiddleware,
+    catchedAsync(controller.getMiOpinion),
+  );
 
   // 3. Crear opinión (vecino autenticado)
   router.post(
@@ -44,11 +48,7 @@ export const OpinionesRoutes = (): Router => {
   );
 
   // 5. Eliminar respuesta de comerciante (dueño del negocio o admin)
-  router.delete(
-    '/:id/respuesta',
-    authMiddleware,
-    catchedAsync(controller.eliminarRespuesta),
-  );
+  router.delete('/:id/respuesta', authMiddleware, catchedAsync(controller.eliminarRespuesta));
 
   // 6. Eliminar opinión completa (autor o admin/moderador)
   router.delete('/:id', authMiddleware, catchedAsync(controller.delete));

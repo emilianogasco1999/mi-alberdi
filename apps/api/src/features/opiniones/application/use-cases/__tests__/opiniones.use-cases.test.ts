@@ -66,7 +66,7 @@ class MockOpinionesRepository implements IOpinionesRepository {
       negocioId: data.negocioId,
       publicacionId: data.publicacionId ?? null,
       publicacionTitulo: data.publicacionId
-        ? this.publicaciones.get(data.publicacionId)?.titulo ?? null
+        ? (this.publicaciones.get(data.publicacionId)?.titulo ?? null)
         : null,
       usuarioId: data.usuarioId,
       nombreAutorVisible: data.nombreAutorVisible,
@@ -122,9 +122,7 @@ class MockOpinionesRepository implements IOpinionesRepository {
     query: QueryOpinionesNegocioInput,
   ): Promise<ListadoOpinionesResponseDTO> {
     const negocio = this.negocios.get(negocioId);
-    const ops = Array.from(this.opiniones.values()).filter(
-      (o) => o.negocioId === negocioId,
-    );
+    const ops = Array.from(this.opiniones.values()).filter((o) => o.negocioId === negocioId);
 
     return {
       opiniones: ops,
@@ -143,9 +141,7 @@ class MockOpinionesRepository implements IOpinionesRepository {
   async recalcularRatingNegocio(
     negocioId: string,
   ): Promise<{ ratingPromedio: number; totalOpiniones: number }> {
-    const ops = Array.from(this.opiniones.values()).filter(
-      (o) => o.negocioId === negocioId,
-    );
+    const ops = Array.from(this.opiniones.values()).filter((o) => o.negocioId === negocioId);
     const sum = ops.reduce((acc, o) => acc + o.puntuacion, 0);
     const count = ops.length;
     const avg = count > 0 ? Number((sum / count).toFixed(2)) : 0;
@@ -181,15 +177,12 @@ describe('POW-33: Opiniones Use Cases', () => {
       const { repo, negocioId } = setup();
       const useCase = new CreateOpinionUseCase(repo);
 
-      const result = await useCase.execute(
-        'vecino-uuid-1',
-        {
-          negocioId,
-          nombreAutorVisible: 'Carlos Morales',
-          puntuacion: 5,
-          comentario: 'Excelente servicio, atienden muy rápido',
-        },
-      );
+      const result = await useCase.execute('vecino-uuid-1', {
+        negocioId,
+        nombreAutorVisible: 'Carlos Morales',
+        puntuacion: 5,
+        comentario: 'Excelente servicio, atienden muy rápido',
+      });
 
       assert.equal(result.puntuacion, 5);
       assert.equal(result.nombreAutorVisible, 'Carlos Morales');
@@ -311,17 +304,11 @@ describe('POW-33: Opiniones Use Cases', () => {
         puntuacion: 5,
       });
 
-      const result = await responderUseCase.execute(
-        op.id,
-        ownerId,
-        'comerciante',
-        { respuestaComerciante: '¡Muchas gracias por elegirnos Carlos!' },
-      );
+      const result = await responderUseCase.execute(op.id, ownerId, 'comerciante', {
+        respuestaComerciante: '¡Muchas gracias por elegirnos Carlos!',
+      });
 
-      assert.equal(
-        result.respuestaComerciante,
-        '¡Muchas gracias por elegirnos Carlos!',
-      );
+      assert.equal(result.respuestaComerciante, '¡Muchas gracias por elegirnos Carlos!');
       assert.ok(result.respondidoEn);
     });
 
@@ -338,12 +325,9 @@ describe('POW-33: Opiniones Use Cases', () => {
 
       await assert.rejects(
         async () => {
-          await responderUseCase.execute(
-            op.id,
-            'otro-usuario',
-            'comerciante',
-            { respuestaComerciante: 'Respuesta' },
-          );
+          await responderUseCase.execute(op.id, 'otro-usuario', 'comerciante', {
+            respuestaComerciante: 'Respuesta',
+          });
         },
         { name: 'ForbiddenError' },
       );

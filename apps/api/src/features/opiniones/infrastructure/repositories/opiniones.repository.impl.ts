@@ -13,10 +13,7 @@ import type {
 } from '../../domain/repositories/IOpinionesRepository.js';
 
 export class OpinionesRepositoryImpl implements IOpinionesRepository {
-  private mapToDTO(
-    opinion: any,
-    publicacionTitulo?: string | null,
-  ): OpinionDTO {
+  private mapToDTO(opinion: any, publicacionTitulo?: string | null): OpinionDTO {
     return {
       id: opinion.id,
       negocioId: opinion.negocioId,

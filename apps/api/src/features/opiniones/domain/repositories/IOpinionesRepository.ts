@@ -28,13 +28,8 @@ export interface IOpinionesRepository {
   findPublicacionById(
     id: string,
   ): Promise<{ id: string; negocioId: string; titulo: string } | null>;
-  findOpinionById(
-    id: string,
-  ): Promise<(OpinionDTO & { propietarioNegocioId: string }) | null>;
-  findOpinionByUsuarioYNegocio(
-    usuarioId: string,
-    negocioId: string,
-  ): Promise<OpinionDTO | null>;
+  findOpinionById(id: string): Promise<(OpinionDTO & { propietarioNegocioId: string }) | null>;
+  findOpinionByUsuarioYNegocio(usuarioId: string, negocioId: string): Promise<OpinionDTO | null>;
   createOpinion(data: CreateOpinionData): Promise<OpinionDTO>;
   updateOpinion(id: string, data: UpdateOpinionInput): Promise<OpinionDTO>;
   responderOpinion(id: string, respuesta: string): Promise<OpinionDTO>;

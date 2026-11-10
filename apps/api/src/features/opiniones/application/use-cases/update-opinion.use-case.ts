@@ -25,3 +25,4 @@ export class UpdateOpinionUseCase {
     return this.repository.updateOpinion(opinionId, input);
   }
 }
+

@@ -17,7 +17,9 @@ export class OpinionesController {
   private readonly createOpinionUseCase = new CreateOpinionUseCase(this.repository);
   private readonly updateOpinionUseCase = new UpdateOpinionUseCase(this.repository);
   private readonly responderOpinionUseCase = new ResponderOpinionUseCase(this.repository);
-  private readonly eliminarRespuestaUseCase = new EliminarRespuestaComercianteUseCase(this.repository);
+  private readonly eliminarRespuestaUseCase = new EliminarRespuestaComercianteUseCase(
+    this.repository,
+  );
   private readonly getOpinionesNegocioUseCase = new GetOpinionesNegocioUseCase(this.repository);
   private readonly getMiOpinionUseCase = new GetMiOpinionUseCase(this.repository);
   private readonly deleteOpinionUseCase = new DeleteOpinionUseCase(this.repository);
@@ -29,11 +31,7 @@ export class OpinionesController {
 
     const dispositivoId = (req.headers['x-device-id'] as string) || null;
 
-    const result = await this.createOpinionUseCase.execute(
-      req.user.id,
-      req.body,
-      dispositivoId,
-    );
+    const result = await this.createOpinionUseCase.execute(req.user.id, req.body, dispositivoId);
 
     response(
       res,
@@ -51,11 +49,7 @@ export class OpinionesController {
     const param = req.params.id;
     const opinionId = Array.isArray(param) ? param[0] : param;
 
-    const result = await this.updateOpinionUseCase.execute(
-      opinionId,
-      req.user.id,
-      req.body,
-    );
+    const result = await this.updateOpinionUseCase.execute(opinionId, req.user.id, req.body);
 
     response(
       res,
