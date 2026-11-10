@@ -38,7 +38,7 @@ Realizá las siguientes fases en orden:
 
 1. Creá `pnpm-workspace.yaml` declarando `apps/*`, `packages/*` y `allowBuilds` para dependencias nativas (`@prisma/client`, `@prisma/engines`, `bcrypt`, `sharp`, `esbuild`).
 2. Creá el `package.json` raíz con los scripts canónicos (`dev`, `dev:api`, `dev:web`, `dev:local`, `dev:db`, `dev:down`, `prod:up`, `prod:down`, `build`, `lint`) y dependencias de desarrollo (`typescript`).
-3. Creá `.env.example` (siguiendo la plantilla canónica de `monorepo-examples.md` con `PORT_API`, `PORT_WEB`, `INTERNAL_API_URL`, `COMPOSE_FILE`, `POSTGRES_*`, `PGADMIN_*`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `ACCESS_TOKEN_EXPIRES`, `REFRESH_TOKEN_EXPIRES`, `MINIO_*` y `S3_*`) y `.gitignore`.
+3. Creá `.env.example` (siguiendo la plantilla canónica de `monorepo-examples.md` con `PORT_API`, `PORT_WEB`, `INTERNAL_API_URL`, `COMPOSE_FILE`, `POSTGRES_*`, `PGADMIN_*`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `ACCESS_TOKEN_EXPIRES`, `REFRESH_TOKEN_EXPIRES`, `MINIO_*` y `S3_*`), `.gitignore` y `AGENTS.md` (con reglas de Clean Architecture, TypeScript estricto, Conventional Commits y la plantilla obligatoria de Definition of Done para tickets de Linear).
 4. Creá `docker-compose.yml` utilizando `include: - path: .docker/dev/docker-compose.dev.yml`, definí los 4 servicios de desarrollo (`postgres`, `pgadmin`, `minio` con `alpine/minio:latest-release`, y `backup`) en `.docker/dev/docker-compose.dev.yml` y creá los scripts de `.docker/backup/` (`Dockerfile`, `entrypoint.sh`, `backup.sh`, `rclone.conf.example`).
 5. Creá `packages/config` con `tsconfig.base.json`, `tsconfig.node.json` y `tsconfig.react.json`.
 6. Creá `packages/shared` con:
