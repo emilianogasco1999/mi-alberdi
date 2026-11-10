@@ -28,6 +28,7 @@ La estructura raíz organiza aplicaciones, librerías compartidas, infraestructu
 ├── .env.example             # Plantilla canónica de variables de entorno requeridas
 ├── .gitignore               # Exclusiones de control de versiones
 ├── .prettierrc              # Estándares de formateo de código unificados
+├── AGENTS.md                # Reglas operativas, convenciones de Clean Architecture y DoD para agentes
 ├── docker-compose.yml       # Orquestación de infraestructura local (BD, Storage, etc.)
 ├── package.json             # Scripts de orquestación global del workspace
 ├── pnpm-lock.yaml           # Bloqueo determinista de versiones de dependencias

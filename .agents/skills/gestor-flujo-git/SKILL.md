@@ -257,4 +257,61 @@ Cuando el usuario pida realizar operaciones de Git (crear ramas, commits, push, 
 3. **Chequear integridad**: Validar que no queden archivos sin commitear inesperados ni conflictos.
 4. **Proponer y ejecutar con claridad**: Mostrar qué comando se ejecutará y el objetivo del mismo.
 5. **Explicar desvíos**: Si el usuario pide una acción que rompe el flujo (ej: subir directo a `main`), explicar respetuosamente la regla de seguridad y proponer el flujo por PR correspondiente.
+6. **Entregar reporte para Linear**: Al completar la tarea o preparar el PR, generar obligatoriamente el reporte estructurado para el ticket de Linear según la sección 12.
+
+---
+
+## 12. Plantilla Obligatoria de Cierre de Tarea (Linear Ticket Comment)
+
+Siempre que se finalice una tarea técnica o funcional, el agente debe proveer el comentario listo para pegar en el ticket de Linear correspondiente:
+
+```markdown
+### 📌 Resumen de la Tarea
+- **Descripción**: [Qué se implementó o corrigió]
+- **Rama / PR**: `feature/...` | [PR #XX si fue abierto]
+- **Requiere Migración / Env**: [No | Sí: detallar comandos de Prisma o variables de entorno]
+
+---
+
+### 📂 Archivos Modificados
+- `apps/api/src/...`
+- `apps/web/src/...`
+- `packages/shared/src/...`
+
+---
+
+### 🔌 Endpoints & Contratos (si aplica)
+> [!IMPORTANT]
+> - Validar las rutas contra el montaje real en Express (`src/index.ts`) para garantizar que el prefijo base sea el exacto del backend (ej. `/api/...`).
+> - Si la tarea involucra **múltiples endpoints**, es obligatorio desglosar **CADA UNO** en su propia subsección detallando Payload, Response y Errores mapeados.
+
+#### 1. `[VERBO] /api/...`
+- **Descripción**: [Propósito del endpoint]
+- **Payload (Request)**:
+  ```json
+  {}
+  ```
+- **Response Exitoso (HTTP 200/201)**:
+  ```json
+  {}
+  ```
+- **Casos de Error Mapeados**:
+  - `400 Bad Request`: [Descripción y código de error centralizado]
+  - `401 Unauthorized / 403 Forbidden`: [Descripción]
+  - `404 Not Found / 409 Conflict`: [Descripción]
+
+---
+
+### 🧪 Guía de Pruebas (QA / Review)
+
+#### 1. Happy Path (Verificación de funcionamiento exitoso)
+1. [Paso 1: Preparación del entorno / estado previo]
+2. [Paso 2: Acción realizada o request enviado]
+3. [Paso 3: Verificación de resultado exitoso]
+
+#### 2. Unhappy Paths (Verificación de errores esperados)
+- **Caso A ([Nombre del error])**: [Acción] -> Debe responder [Status HTTP] con [código/mensaje esperado].
+- **Caso B ([Nombre del error])**: [Acción] -> Debe responder [Status HTTP] con [código/mensaje esperado].
+```
+
 
