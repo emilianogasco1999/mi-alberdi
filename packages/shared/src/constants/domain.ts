@@ -137,6 +137,22 @@ export const ESTADOS_VERIFICACION_VALUES = [
 
 export type EstadoVerificacion = (typeof ESTADOS_VERIFICACION)[keyof typeof ESTADOS_VERIFICACION];
 
+export const ESTADOS_MODERACION = {
+  PENDIENTE: 'pendiente',
+  EN_REVISION: 'en_revision',
+  RESUELTO_ACEPTADO: 'resuelto_aceptado',
+  RESUELTO_DESESTIMADO: 'resuelto_desestimado',
+} as const;
+
+export const ESTADOS_MODERACION_VALUES = [
+  ESTADOS_MODERACION.PENDIENTE,
+  ESTADOS_MODERACION.EN_REVISION,
+  ESTADOS_MODERACION.RESUELTO_ACEPTADO,
+  ESTADOS_MODERACION.RESUELTO_DESESTIMADO,
+] as const;
+
+export type EstadoModeracion = (typeof ESTADOS_MODERACION)[keyof typeof ESTADOS_MODERACION];
+
 export const DIAS_SEMANA = {
   DOMINGO: 0,
   LUNES: 1,

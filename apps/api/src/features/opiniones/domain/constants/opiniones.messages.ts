@@ -1,0 +1,30 @@
+export const opinionesMessages = {
+  createSuccess: {
+    statusCode: 201,
+    message: 'Opinión registrada exitosamente',
+  },
+  updateSuccess: {
+    statusCode: 200,
+    message: 'Opinión actualizada exitosamente',
+  },
+  responderSuccess: {
+    statusCode: 200,
+    message: 'Respuesta de comerciante publicada exitosamente',
+  },
+  eliminarRespuestaSuccess: {
+    statusCode: 200,
+    message: 'Respuesta de comerciante eliminada exitosamente',
+  },
+  getOpinionesSuccess: {
+    statusCode: 200,
+    message: 'Listado de opiniones obtenido exitosamente',
+  },
+  getMiOpinionSuccess: {
+    statusCode: 200,
+    message: 'Tu opinión fue obtenida exitosamente',
+  },
+  deleteSuccess: {
+    statusCode: 200,
+    message: 'Opinión eliminada exitosamente',
+  },
+} as const;

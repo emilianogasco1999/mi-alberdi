@@ -6,3 +6,5 @@ export * from './catalogo.schema.js';
 export * from './descubrimiento.schema.js';
 export * from './membresia.schema.js';
 export * from './analitica.schema.js';
+export * from './opinion.schema.js';
+export * from './moderacion.schema.js';
