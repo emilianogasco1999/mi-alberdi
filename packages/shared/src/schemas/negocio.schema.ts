@@ -1,12 +1,10 @@
 import { z } from 'zod';
 import {
   ALCANCES_ENVIO_VALUES,
-  DIAS_SEMANA_VALUES,
   ESTADOS_NEGOCIO_VALUES,
   ESTADOS_VERIFICACION_VALUES,
   MODALIDADES_ATENCION_VALUES,
   TIPOS_PERFIL_COMERCIAL_VALUES,
-  TIPOS_PUBLICACION_VALUES,
 } from '../constants/domain.js';
 
 // =============================================================================
@@ -20,7 +18,6 @@ const PHONE_REGEX = /^\+?[0-9\s\-()]{8,30}$/;
 export const tipoPerfilComercialSchema = z.enum(TIPOS_PERFIL_COMERCIAL_VALUES);
 export const modalidadAtencionSchema = z.enum(MODALIDADES_ATENCION_VALUES);
 export const alcanceEnvioSchema = z.enum(ALCANCES_ENVIO_VALUES);
-export const tipoPublicacionSchema = z.enum(TIPOS_PUBLICACION_VALUES);
 export const estadoNegocioSchema = z.enum(ESTADOS_NEGOCIO_VALUES);
 export const estadoVerificacionSchema = z.enum(ESTADOS_VERIFICACION_VALUES);
 export const diaSemanaSchema = z.union([
@@ -176,12 +173,7 @@ export const createSucursalSchema = z.object({
     .min(3, 'Ingresá una dirección válida')
     .max(200, 'No puede superar 200 caracteres'),
   barrio: z.string().trim().max(80, 'Máximo 80 caracteres').optional().nullable(),
-  referenciaVisual: z
-    .string()
-    .trim()
-    .max(200, 'Máximo 200 caracteres')
-    .optional()
-    .nullable(),
+  referenciaVisual: z.string().trim().max(200, 'Máximo 200 caracteres').optional().nullable(),
   fotoFachadaUrl: z.string().url('URL de fachada inválida').optional().nullable(),
   whatsappSucursal: z
     .string()
@@ -237,12 +229,7 @@ export const baseNegocioSchema = z.object({
     .min(2, 'Debe tener al menos 2 caracteres')
     .max(120, 'No puede superar los 120 caracteres'),
   eslogan: z.string().trim().max(160, 'Máximo 160 caracteres').optional().nullable(),
-  matriculaProfesional: z
-    .string()
-    .trim()
-    .max(60, 'Máximo 60 caracteres')
-    .optional()
-    .nullable(),
+  matriculaProfesional: z.string().trim().max(60, 'Máximo 60 caracteres').optional().nullable(),
   descripcion: z
     .string()
     .trim()
@@ -298,12 +285,7 @@ export const baseNegocioSchema = z.object({
   haceEnvios: z.boolean().default(false),
   alcanceEnvios: alcanceEnvioSchema.default('sin_envio'),
   aceptaCuotas: z.boolean().default(false),
-  politicaCambios: z
-    .string()
-    .trim()
-    .max(1000, 'Máximo 1000 caracteres')
-    .optional()
-    .nullable(),
+  politicaCambios: z.string().trim().max(1000, 'Máximo 1000 caracteres').optional().nullable(),
   metodosPagoIds: z.array(z.string().uuid('ID de método de pago inválido')).optional(),
 });
 
@@ -352,49 +334,9 @@ export const vincularMetodosPagoSchema = z.object({
       z.object({
         metodoPagoId: z.string().uuid('ID de método de pago inválido'),
         detalle: z.string().trim().max(100).optional().nullable(),
-      })
+      }),
     )
     .min(1, 'Debés indicar al menos un método de pago'),
 });
 
 export type VincularMetodosPagoInput = z.infer<typeof vincularMetodosPagoSchema>;
-
-// =============================================================================
-// PUBLICACIONES (CATÁLOGO Y DESTACADOS)
-// =============================================================================
-
-export const createPublicacionSchema = z.object({
-  negocioId: z.string().uuid('ID de negocio inválido'),
-  categoriaId: z.string().uuid('ID de categoría inválido'),
-  tipo: tipoPublicacionSchema,
-  titulo: z
-    .string({ required_error: 'El título de la publicación es obligatorio' })
-    .trim()
-    .min(3, 'El título debe tener al menos 3 caracteres')
-    .max(140, 'No puede superar los 140 caracteres'),
-  descripcion: z
-    .string({ required_error: 'La descripción es obligatoria' })
-    .trim()
-    .min(10, 'Describí mejor tu servicio o producto (mínimo 10 caracteres)')
-    .max(3000, 'Máximo 3000 caracteres'),
-  precioReferenciaArs: z.number().nonnegative('El precio no puede ser negativo').optional().nullable(),
-  etiquetaPrecio: z.string().trim().max(40, 'Máximo 40 caracteres').optional().nullable(),
-  modalidad: modalidadAtencionSchema.default('horarios_fijos'),
-  whatsappEspecifico: z
-    .string()
-    .trim()
-    .regex(PHONE_REGEX, 'Número de WhatsApp inválido')
-    .max(30)
-    .optional()
-    .nullable(),
-  mensajeWhatsappCustom: z.string().trim().max(250).optional().nullable(),
-  esDestacada: z.boolean().default(false),
-});
-
-export type CreatePublicacionInput = z.infer<typeof createPublicacionSchema>;
-
-export const updatePublicacionSchema = createPublicacionSchema
-  .omit({ negocioId: true })
-  .partial();
-
-export type UpdatePublicacionInput = z.infer<typeof updatePublicacionSchema>;

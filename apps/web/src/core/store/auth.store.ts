@@ -28,6 +28,7 @@ export const useAuthStore = create<AuthState>()(
       name: 'mi-alberdi-auth-storage',
       partialize: (state) => ({
         user: state.user,
+        accessToken: state.accessToken,
       }),
     },
   ),
