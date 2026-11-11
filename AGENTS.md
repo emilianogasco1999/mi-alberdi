@@ -1,5 +1,13 @@
 # Code Review Rules - Mi Alberdi
 
+## Submódulos y Skills de Agentes
+- La skill canónica del monorepo reside en el submódulo Git `.agents/skills/pnpm-monorepo`.
+- **Regla para Asistentes de IA**: Si al iniciar la sesión o consultar las directivas el directorio `.agents/skills/pnpm-monorepo` está vacío o no contiene sus archivos, el asistente debe ejecutar automáticamente en la terminal:
+  ```bash
+  git submodule update --init --recursive
+  ```
+  antes de responder o modificar código.
+
 ## Clean Architecture & Monorepo
 - Apps: `apps/api` (Express backend) and `apps/web` (Next.js 16 frontend).
 - Shared contracts: all DTOs and Zod schemas must live in `packages/shared`.
