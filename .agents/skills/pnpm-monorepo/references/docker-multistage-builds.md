@@ -47,11 +47,11 @@ COPY apps/api/ apps/api/
 RUN pnpm install --frozen-lockfile
 
 # 3. Generar cliente del ORM (Prisma)
-RUN pnpm --filter "@finca/api" db:generate
+RUN pnpm --filter "@<scope>/api" db:generate
 
-# 4. Compilar en orden: primero shared (SSOT), luego API
-RUN pnpm --filter "@finca/shared" build
-RUN pnpm --filter "@finca/api" build
+# 4. Compilar en orden: primero shared (SSOT con tsup), luego API
+RUN pnpm --filter "@<scope>/shared" build
+RUN pnpm --filter "@<scope>/api" build
 
 # ==========================================
 # STAGE 3: Runtime Mínimo de Producción
@@ -120,9 +120,9 @@ COPY apps/web/ apps/web/
 
 RUN pnpm install --frozen-lockfile
 
-# Compilar paquetes compartidos antes del build de Next.js
-RUN pnpm --filter "@finca/shared" build
-RUN pnpm --filter "@finca/web" build
+# Compilar paquetes compartidos con tsup antes del build de Next.js
+RUN pnpm --filter "@<scope>/shared" build
+RUN pnpm --filter "@<scope>/web" build
 
 # ==========================================
 # STAGE 3: Runtime Standalone

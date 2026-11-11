@@ -57,6 +57,7 @@ A diferencia de npm y Yarn v1 (que "aplanaban" o hacían *hoisting* de todo en u
 - **No usar APIs de Node**: No importar `node:fs`, `node:path`, `node:crypto`, `node:process` dentro de `packages/shared`.
 - **No usar APIs del navegador**: No acceder a `window`, `document`, `localStorage` dentro de `packages/shared`.
 - **Zod como contrato universal**: Todo esquema de validación debe ser puro (estructuras, tipos primitivos, validaciones de regex, mensajes de error).
+- **Compilación obligatoria con `tsup`**: Para garantizar interoperabilidad entre Node en Docker y Next.js sin errores de extensiones `.ts`, `packages/shared` debe compilar artefactos (`dist/index.js` y `dist/index.d.ts`) usando `tsup` y exponerlos mediante el mapa `exports` de `package.json` (ver [Mecánica de Compilación y Consumo](package-bundling-and-consumption.md)).
 
 ---
 

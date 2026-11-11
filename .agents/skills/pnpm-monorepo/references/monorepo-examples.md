@@ -126,7 +126,68 @@ S3_REGION=us-east-1
 
 ---
 
-## 4. Contratos Compartidos: Esquemas Zod (`packages/shared/src/schemas/user.schema.ts`)
+## 4. Manifiesto y Empaquetado de Contratos (`packages/shared/`)
+
+### A. Manifiesto Canónico (`packages/shared/package.json`)
+Declara el mapa `exports` para que Node (Docker) y TypeScript (IDE) resuelvan sin fricción:
+
+```json
+{
+  "name": "@<scope>/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@<scope>/config": "workspace:*",
+    "rimraf": "^5.0.7",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
+  }
+}
+```
+
+### B. Configuración de `tsup` (`packages/shared/tsup.config.ts`)
+
+```typescript
+import { defineConfig } from "tsup";
+
+export default defineConfig({
+  entry: ["src/index.ts"],
+  format: ["esm", "cjs"],
+  dts: true,
+  clean: true,
+  sourcemap: true,
+  splitting: false,
+  treeshake: true,
+  minify: process.env.NODE_ENV === "production",
+});
+```
+
+---
+
+## 5. Contratos Compartidos: Esquemas Zod (`packages/shared/src/schemas/user.schema.ts`)
 
 > [!NOTE]
 > **Compatibilidad Zod v3 vs Zod v4**:

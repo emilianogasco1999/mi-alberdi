@@ -100,7 +100,7 @@ Evita la fragmentación de configuraciones técnicas en cada aplicación:
   - `domain/`: Reglas de negocio puras, Entidades y Value Objects (sin dependencias de frameworks).
   - `application/`: Casos de uso (`use-cases`), orquestación de la lógica.
   - `infrastructure/`: Implementación de persistencia (ORM/Prisma), clientes de almacenamiento (S3) y servicios de terceros.
-  - `presentation/`: Rutas, middlewares (autenticación, autorización de roles), y controladores HTTP.
+  - `presentation/`: Rutas, middlewares (autenticación, autorización de roles, logging con Request ID), controladores HTTP y sondas de salud (`/healthz`, `/ready`).
 
 ### `apps/web` (Frontend con Clean Architecture & Feature-Driven)
 - Diseñado bajo **Clean Architecture desacoplada + Feature-Driven & Container/Presentational**:
@@ -119,6 +119,7 @@ Evita la fragmentación de configuraciones técnicas en cada aplicación:
 
 - **Docker Compose**: Gestiona servicios auxiliares (base de datos relacional, storage compatible con S3/MinIO, caches) sin obligar a instalar motores locales.
 - **Variables de Entorno**: El archivo `.env.example` en la raíz documenta todas las claves requeridas para levantar los servicios del workspace y sus puertos.
+- **Validación Fail-Fast en Runtime**: `apps/api` y `apps/web` validan estrictamente las variables de entorno al iniciar mediante esquemas Zod (`env.ts` y `@t3-oss/env-nextjs`). Si falta una sola variable obligatoria, el proceso aborta de inmediato con código 1.
 
 ---
 
@@ -141,6 +142,8 @@ pnpm prod:down       # Detiene la infraestructura de producción
 # Construcción y Calidad
 pnpm build           # Compila todos los paquetes y aplicaciones recursivamente
 pnpm lint            # Verificación de tipos y análisis estático en todo el monorepo
+pnpm test            # Ejecuta la suite de pruebas unitarias e integración con Vitest
+pnpm test:e2e        # Ejecuta pruebas End-to-End con Playwright
 ```
 
 ---
@@ -163,6 +166,10 @@ Esta skill define **patrones arquitectónicos inmutables** (Clean Architecture, 
 Para profundizar en normas operativas específicas, consultar bajo demanda:
 
 ### Estándares del Workspace e Infraestructura:
+- [CI/CD y Detección de Cambios](references/ci-cd-and-change-detection.md): Pipeline de GitHub Actions con filtros inteligentes de pnpm (`...[origin/main]`), gates de calidad y verificación de builds en PRs.
+- [Validación de Variables de Entorno (Fail-Fast)](references/environment-variables-and-validation.md): Validación en runtime con Zod y @t3-oss/env-nextjs, tipado inmutable y prevención de fuga de secretos en el cliente.
+- [Mecánica de Compilación y Consumo de Paquetes](references/package-bundling-and-consumption.md): Empaquetado canónico con `tsup`, mapa `exports` para Node/Docker vs Next.js, resolución `.ts`/`.mjs` y orden en Docker multi-stage.
+- [Estrategia y Arquitectura de Testing](references/testing-strategy.md): Pirámide de pruebas (Unit, Integration, E2E), workspaces con Vitest, doubles en memoria para Clean Architecture, testing de endpoints (Supertest) y frontend (MSW).
 - [Política y Gestión de Dependencias](references/dependencies.md): Reglas de aislamiento por capa, uso de `workspace:*`, prevención de *phantom dependencies* y comandos con `--filter`.
 - [Infraestructura y Contenedores (Docker)](references/docker-infrastructure.md): Modelo híbrido de desarrollo (`postgres`, `pgadmin`, `minio`, `backup`), compose modular en `.docker/`, volúmenes nombrados y redes de servicios.
 - [Docker Multi-Stage Builds en Monorepos](references/docker-multistage-builds.md): Dockerfiles canónicos para API (Prisma/Express) y Frontend (Next.js Standalone), cache de capas y usuario no-root.
@@ -171,6 +178,7 @@ Para profundizar en normas operativas específicas, consultar bajo demanda:
 - [Ejemplos Canónicos del Monorepo Raíz y Shared](references/monorepo-examples.md): Snippets modelo para `pnpm-workspace.yaml`, `.env.example`, esquemas Zod en `packages/shared`, constantes y `tsconfig` con path aliases.
 
 ### Arquitectura de Backend (`apps/api`):
+- [Observabilidad, Logging y Health Checks](references/observability-and-health-checks.md): Registro estructurado JSON con Pino, trazabilidad con `x-request-id`, liveness probe (`/healthz`) y readiness probe (`/ready` contra Postgres/MinIO).
 - [Clean Architecture en Backend](references/backend/clean-architecture.md): Topología Feature-Sliced, regla de dependencias, matrices de imports y estructura completa por feature.
 - [Reglas de Dependencias por Capa (Backend)](references/backend/layer-rules.md): Matriz estricta de imports permitidos y prohibidos entre domain, application, infrastructure y presentation.
 - [Stack de Dependencias del Backend](references/backend/dependencies-stack.md): Justificación, compatibilidad de versiones (Prisma 6/7, Zod 3/4) y uso de Express, Prisma, JWT, Bcrypt, Rate Limit y Swagger.

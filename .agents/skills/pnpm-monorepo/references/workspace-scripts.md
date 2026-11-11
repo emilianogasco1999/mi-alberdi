@@ -30,6 +30,10 @@ El `package.json` raíz actúa como el panel de control operativo:
 | `prod:down` | `docker compose --env-file .env -f .docker/prod/docker-compose.prod.yml down` | Detiene los servicios de producción. |
 | `build` | `pnpm -r build` | Compila todo el monorepo en el orden correcto de dependencias. |
 | `lint` | `pnpm -r lint` | Chequea tipos y reglas estáticas en todos los paquetes (`tsc --noEmit`). |
+| `test` | `vitest run` | Ejecuta la suite completa de pruebas unitarias e integración en el workspace. |
+| `test:unit` | `vitest run --exclude="**/*.integration.spec.ts" --exclude="**/*.api.spec.ts"` | Ejecuta únicamente pruebas unitarias puras (casos de uso y dominio). |
+| `test:integration` | `vitest run --include="**/*.integration.spec.ts" --include="**/*.api.spec.ts"` | Ejecuta pruebas contra base de datos y endpoints con Supertest. |
+| `test:e2e` | `pnpm --filter "@<scope>/web" exec playwright test` | Ejecuta las pruebas End-to-End de navegador con Playwright. |
 
 ---
 

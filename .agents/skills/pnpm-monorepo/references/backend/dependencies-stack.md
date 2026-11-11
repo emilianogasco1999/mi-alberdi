@@ -22,9 +22,9 @@ Esta referencia técnica documenta el catálogo de dependencias que componen el 
 - **Propósito**: Protección contra ataques de fuerza bruta, abuso de endpoints y denegación de servicio (DoS).
 - **Uso en el sistema**: Configurado en `core/presentation/middlewares/rateLimiter.middleware.ts` con políticas diferenciadas (límite general holgado para `/api` y límite estricto con `skipSuccessfulRequests: true` para `/api/auth/login`).
 
-### `morgan` / `pino`
-- **Propósito**: Logging de peticiones HTTP y eventos del servidor.
-- **Uso en el sistema**: Registra método, ruta, código de estado y tiempo de respuesta de cada petición.
+### `pino` + `pino-http` (con `pino-pretty` en desarrollo)
+- **Propósito**: Logging estructurado de alto rendimiento en formato JSON, correlación de peticiones con `x-request-id` y prevención de contaminación de consola.
+- **Uso en el sistema**: Configurado en `core/presentation/middlewares/httpLogger.middleware.ts`. Registra método, ruta, código de estado, tiempo de respuesta y Request ID, ignorando automáticamente sondas de salud (`/healthz`). En desarrollo formatea con colores vía `pino-pretty`. (Ver [Observabilidad y Health Checks](../observability-and-health-checks.md)).
 
 ---
 
