@@ -1,0 +1,3 @@
+[submodule ".agents/skills/pnpm-monorepo"]
+	path = .agents/skills/pnpm-monorepo
+	url = https://github.com/emilianogasco1999/pnpm-monorepo-skill.git
