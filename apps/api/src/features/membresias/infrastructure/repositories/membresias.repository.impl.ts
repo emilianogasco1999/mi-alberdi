@@ -73,7 +73,7 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
   }
 
   async getUsuarioPuedeProbarPremium(usuarioId: string): Promise<boolean> {
-    const usuario = await prisma.perfilUsuario.findUnique({
+    const usuario = await prisma.user.findUnique({
       where: { id: usuarioId },
       select: { puedeProbarPremium: true },
     });
@@ -228,7 +228,7 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
       });
 
       // Marcar usuario como que ya utilizó su beneficio de prueba
-      await tx.perfilUsuario.update({
+      await tx.user.update({
         where: { id: params.usuarioId },
         data: { puedeProbarPremium: false },
       });
@@ -598,7 +598,7 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
         take: limit,
         include: {
           negocio: { select: { nombreComercial: true } },
-          usuario: { select: { nombre: true, apellido: true } },
+          usuario: { select: { name: true } },
         },
       }),
       prisma.pagoMembresia.count({
@@ -621,7 +621,7 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
       creadoEn: p.creadoEn.toISOString(),
       actualizadoEn: p.actualizadoEn.toISOString(),
       negocioNombre: p.negocio.nombreComercial,
-      usuarioNombre: `${p.usuario.nombre} ${p.usuario.apellido ?? ''}`.trim(),
+      usuarioNombre: p.usuario?.name ?? '',
     }));
 
     return {
@@ -656,7 +656,7 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
         take: limit,
         include: {
           negocio: { select: { nombreComercial: true } },
-          usuario: { select: { nombre: true, apellido: true } },
+          usuario: { select: { name: true } },
         },
       }),
       prisma.pagoMembresia.count({ where }),
@@ -677,7 +677,7 @@ export class MembresiasRepositoryImpl implements IMembresiasRepository {
       creadoEn: p.creadoEn.toISOString(),
       actualizadoEn: p.actualizadoEn.toISOString(),
       negocioNombre: p.negocio.nombreComercial,
-      usuarioNombre: `${p.usuario.nombre} ${p.usuario.apellido ?? ''}`.trim(),
+      usuarioNombre: p.usuario?.name ?? '',
     }));
 
     return {

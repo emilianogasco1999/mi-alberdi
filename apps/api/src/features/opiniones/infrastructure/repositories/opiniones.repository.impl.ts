@@ -34,14 +34,19 @@ export class OpinionesRepositoryImpl implements IOpinionesRepository {
   async findUsuarioById(
     id: string,
   ): Promise<{ id: string; nombre: string; apellido: string | null } | null> {
-    return prisma.perfilUsuario.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
-        nombre: true,
-        apellido: true,
+        name: true,
       },
     });
+    if (!user) return null;
+    return {
+      id: user.id,
+      nombre: user.name,
+      apellido: null,
+    };
   }
 
   async findNegocioById(id: string): Promise<NegocioMetadata | null> {
