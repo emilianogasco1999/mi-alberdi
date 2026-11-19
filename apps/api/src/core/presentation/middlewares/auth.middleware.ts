@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import { fromNodeHeaders } from 'better-auth/node';
 import type { RolUsuario } from '@mi-alberdi/shared';
-import { envs } from '@config/environment.js';
 import { UnauthorizedError } from '@core/domain/errors/appErrors.js';
 import { auth } from '@core/infrastructure/auth/better-auth.config.js';
 
@@ -42,7 +40,7 @@ declare global {
 
 /**
  * Middleware requireAuth:
- * Extrae y valida la sesión activa con Better Auth (leyendo cookies o cabeceras Bearer).
+ * Extrae y valida la sesión activa 100% con Better Auth (leyendo cookies o cabeceras Bearer).
  * Asocia `req.user` (con `role` y alias `rol`) y `req.session`.
  * Responde 401 Unauthorized si no hay sesión válida.
  */
@@ -52,45 +50,22 @@ export const requireAuth = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    // 1. Intento principal: Resolver sesión mediante Better Auth
     const sessionData = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers),
     });
 
-    if (sessionData?.user && sessionData?.session) {
-      const user = sessionData.user;
-      req.user = {
-        ...user,
-        role: user.role ?? null,
-        rol: (user.role as RolUsuario) ?? ('vecino' as RolUsuario),
-      };
-      req.session = sessionData.session;
-      return next();
+    if (!sessionData?.user || !sessionData?.session) {
+      return next(UnauthorizedError('Token de acceso no proporcionado'));
     }
 
-    // 2. Fallback transitorio para JWT de tokens sintéticos en tests
-    const authHeader = req.headers.authorization;
-    if (authHeader?.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      try {
-        const decoded = jwt.verify(token, envs.JWT_SECRET) as any;
-        req.user = {
-          id: decoded.id,
-          name: decoded.nombre || decoded.name || 'Usuario',
-          email: decoded.email,
-          role: decoded.role || decoded.rol || 'vecino',
-          rol: (decoded.rol || decoded.role || 'vecino') as RolUsuario,
-          emailVerified: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        return next();
-      } catch {
-        // Token inválido, continúa al rechazo
-      }
-    }
-
-    return next(UnauthorizedError('Token de acceso no proporcionado'));
+    const user = sessionData.user;
+    req.user = {
+      ...user,
+      role: user.role ?? null,
+      rol: (user.role as RolUsuario) ?? ('vecino' as RolUsuario),
+    };
+    req.session = sessionData.session;
+    return next();
   } catch (error) {
     next(error);
   }
