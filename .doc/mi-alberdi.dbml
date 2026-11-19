@@ -7,13 +7,14 @@
 Project mi_alberdi {
   database_type: 'PostgreSQL'
   Note: '''
-    # Mi Alberdi — Arquitectura de Datos V1.1
-    Evolución superadora sobre el estudio de GoyaNova:
+    # Mi Alberdi — Arquitectura de Datos V1.2 (Better Auth Canonical)
+    Evolución superadora sobre el estudio de GoyaNova y migración a Better Auth:
     1. Separación limpia entre **Negocio / Perfil Comercial** (`negocios`) y **Publicación** (`publicaciones`), eliminando la tabla monolítica de 42 columnas.
-    2. Distinción nativa entre **Comercio**, **Oficio**, **Profesional** y **Emprendimiento** (`tipo_perfil_comercial`), permitiendo que 1 usuario cree múltiples perfiles (ej: su comercio y su oficio).
-    3. Modelo de **Planes en el Negocio** (Gratis $0, Plata $1.500, Oro $2.500) con **Cupos de Destacados** asignables a publicaciones y **Cupo de Sucursales** (`max_sucursales`: Gratis=1, Plata=3, Oro=10).
-    4. Trazabilidad comercial real (`eventos_analitica`) para demostrar ROI al comerciante (clics a WhatsApp, escaneos QR, vistas).
-    5. Seguridad por diseño: datos sensibles y moderación aislados de las entidades de lectura pública.
+    2. Adopción del modelo canónico de **Better Auth** (`user`, `session`, `account`, `verification`), retirando `perfiles_usuarios` e integrando atributos de dominio (`telefono`, `puede_probar_premium`) directamente en `user`.
+    3. Distinción nativa entre **Comercio**, **Oficio**, **Profesional** y **Emprendimiento** (`tipo_perfil_comercial`), permitiendo que 1 usuario cree múltiples perfiles (ej: su comercio y su oficio).
+    4. Modelo de **Planes en el Negocio** (Gratis $0, Plata $1.500, Oro $2.500) con **Cupos de Destacados** asignables a publicaciones y **Cupo de Sucursales** (`max_sucursales`: Gratis=1, Plata=3, Oro=10).
+    5. Trazabilidad comercial real (`eventos_analitica`) para demostrar ROI al comerciante (clics a WhatsApp, escaneos QR, vistas).
+    6. Seguridad por diseño: sesiones seguras, RBAC nativo en Better Auth y moderación aislada de las entidades de lectura pública.
   '''
 }
 
@@ -135,30 +136,81 @@ Enum estado_moderacion {
 }
 
 // =============================================================================
-// 1. IDENTIDAD Y ACCESO (Usuarios y Seguridad)
+// 1. IDENTIDAD Y ACCESO (Usuarios y Seguridad — Better Auth)
 // =============================================================================
 
-Table perfiles_usuarios [owner: 'identity', pii: 'true'] {
-  id uuid [pk, note: 'FK 1:1 con auth.users de Supabase']
-  nombre varchar(80) [not null]
-  apellido varchar(80)
+Table user [owner: 'identity', pii: 'true'] {
+  id text [pk, note: 'Identificador único alfanumérico generado por Better Auth']
+  name varchar(80) [not null]
   email varchar(255) [not null, unique]
+  email_verified boolean [not null, default: false]
+  image text
+  role varchar(30) [default: 'vecino', note: 'vecino | comerciante | moderador | admin']
+  banned boolean [default: false]
+  ban_reason text
+  ban_expires timestamptz
   telefono varchar(30)
-  avatar_url text
-  rol rol_usuario [not null, default: 'vecino']
-  estado estado_cuenta [not null, default: 'activo']
   puede_probar_premium boolean [not null, default: true, note: 'True si aún no consumió su prueba gratuita']
-  ~timestamps
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 
   Indexes {
-    rol
-    estado
+    role
+  }
+}
+
+Table session [owner: 'identity', pii: 'true'] {
+  id text [pk]
+  expires_at timestamptz [not null]
+  token text [not null, unique]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  ip_address varchar(64)
+  user_agent text
+  user_id text [not null, ref: > user.id]
+  impersonated_by text
+
+  Indexes {
+    user_id
+  }
+}
+
+Table account [owner: 'identity', pii: 'true'] {
+  id text [pk]
+  account_id text [not null]
+  provider_id text [not null]
+  user_id text [not null, ref: > user.id]
+  access_token text
+  refresh_token text
+  id_token text
+  access_token_expires_at timestamptz
+  refresh_token_expires_at timestamptz
+  scope text
+  password text
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  Indexes {
+    user_id
+  }
+}
+
+Table verification [owner: 'identity', pii: 'true'] {
+  id text [pk]
+  identifier text [not null]
+  value text [not null]
+  expires_at timestamptz [not null]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+
+  Indexes {
+    identifier
   }
 }
 
 Table auditoria_accesos [owner: 'security', pii: 'true'] {
   ~uuid_pk
-  usuario_id uuid [not null, ref: > perfiles_usuarios.id]
+  usuario_id text [not null, ref: > user.id]
   ip_address inet
   user_agent text
   dispositivo_hash varchar(128)
@@ -218,7 +270,7 @@ Table pagos_membresia [owner: 'billing', pii: 'true'] {
   ~uuid_pk
   membresia_id uuid [not null, ref: > membresias.id]
   negocio_id uuid [not null, ref: > negocios.id]
-  usuario_id uuid [not null, ref: > perfiles_usuarios.id]
+  usuario_id text [not null, ref: > user.id]
   monto_ars numeric(10,2) [not null, check: `monto_ars >= 0`]
   pasarela varchar(30) [not null, default: 'mercadopago', note: 'mercadopago | transferencia_manual | promo']
   referencia_externa varchar(120) [unique, note: 'ID de pago o preferencia en MercadoPago']
@@ -295,7 +347,7 @@ Table metodos_pago_catalogo [owner: 'catalog'] {
 
 Table negocios [owner: 'core'] {
   ~uuid_pk
-  propietario_id uuid [not null, ref: > perfiles_usuarios.id, note: '1 usuario puede tener múltiples perfiles (ej: un comercio y un oficio)']
+  propietario_id text [not null, ref: > user.id, note: '1 usuario puede tener múltiples perfiles (ej: un comercio y un oficio)']
   tipo_perfil tipo_perfil_comercial [not null, default: 'comercio', note: 'Define si es Comercio, Oficio, Profesional o Emprendimiento']
   rubro_principal_id uuid [not null, ref: > rubros_grupos.id]
   slug varchar(120) [not null, unique, note: 'URL amigable para SEO: /negocio/ferreteria-san-martin']
@@ -483,7 +535,7 @@ Table opiniones [owner: 'engagement'] {
   ~uuid_pk
   negocio_id uuid [not null, ref: > negocios.id]
   publicacion_id uuid [ref: > publicaciones.id, note: 'Opcional: si opinó sobre un servicio puntual']
-  usuario_id uuid [ref: > perfiles_usuarios.id, note: 'Null si es reseña rápida por dispositivo verificado']
+  usuario_id text [ref: > user.id, note: 'Null si es reseña rápida por dispositivo verificado']
   dispositivo_id varchar(128) [note: 'Huella anónima para evitar spam sin obligar a registro']
   nombre_autor_visible varchar(80) [not null]
   puntuacion smallint [not null, check: `puntuacion >= 1 AND puntuacion <= 5`]
@@ -524,12 +576,12 @@ Table eventos_analitica [owner: 'analytics', note: 'El motor para demostrarle al
 Table solicitudes_verificacion [owner: 'moderation', pii: 'true'] {
   ~uuid_pk
   negocio_id uuid [not null, ref: > negocios.id]
-  solicitante_id uuid [not null, ref: > perfiles_usuarios.id]
+  solicitante_id text [not null, ref: > user.id]
   documento_frente_url text [note: 'Bucket privado, nunca público']
   comprobante_comercio_url text [note: 'Foto de habilitación, matrícula profesional, boleta de servicio o local']
   notas_solicitante text
   estado estado_verificacion [not null, default: 'pendiente']
-  revisado_por uuid [ref: > perfiles_usuarios.id]
+  revisado_por text [ref: > user.id]
   motivo_rechazo text
   resuelto_en timestamptz
   ~timestamps
@@ -545,12 +597,12 @@ Table reportes_moderacion [owner: 'moderation'] {
   negocio_id uuid [ref: > negocios.id]
   publicacion_id uuid [ref: > publicaciones.id]
   opinion_id uuid [ref: > opiniones.id]
-  reportante_id uuid [ref: > perfiles_usuarios.id]
+  reportante_id text [ref: > user.id]
   dispositivo_hash varchar(128)
   motivo varchar(80) [not null, note: 'estafa, contenido_inapropiado, datos_falsos, duplicado']
   detalle text
   estado estado_moderacion [not null, default: 'pendiente']
-  revisado_por uuid [ref: > perfiles_usuarios.id]
+  revisado_por text [ref: > user.id]
   resolucion_nota text
   ~timestamps
 
@@ -561,7 +613,7 @@ Table reportes_moderacion [owner: 'moderation'] {
 
 Table feedback_plataforma [owner: 'system', pii: 'true', note: 'RLS estricto: SOLO lectura para rol admin (corrige vulnerabilidad de GoyaNova)'] {
   ~uuid_pk
-  usuario_id uuid [ref: > perfiles_usuarios.id]
+  usuario_id text [ref: > user.id]
   nombre_completo varchar(120)
   email varchar(255)
   mensaje text [not null]
@@ -576,7 +628,7 @@ Table configuracion_sistema [owner: 'system'] {
   id smallint [pk, default: 1, check: `id = 1`]
   modo_mantenimiento boolean [not null, default: false]
   mensaje_mantenimiento text
-  usuarios_excluidos_mantenimiento uuid[]
+  usuarios_excluidos_mantenimiento text[]
   semilla_rotacion_ranking int [not null, default: 1, note: 'Se rota cada hora/día por cron para desempatar negocios del mismo plan']
   version_minima_pwa varchar(20)
   actualizado_en timestamptz [not null, default: `now()`]
