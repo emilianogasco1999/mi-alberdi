@@ -9,9 +9,32 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
-  plugins: [
-    admin(),
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || 'http://localhost:3000',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
   ],
+  plugins: [
+    admin({
+      defaultRole: 'vecino',
+      adminRoles: ['admin'],
+    }),
+  ],
+  user: {
+    additionalFields: {
+      telefono: {
+        type: 'string',
+        required: false,
+        input: false,
+      },
+      puedeProbarPremium: {
+        type: 'boolean',
+        required: false,
+        defaultValue: true,
+        input: false,
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
   },

@@ -8,7 +8,8 @@ import { envs } from '@config/environment.js';
 import { auditContextMiddleware } from '@core/presentation/middlewares/auditContext.middleware.js';
 import { generalRateLimiter } from '@core/presentation/middlewares/rateLimiter.middleware.js';
 import { errorHandler } from '@core/presentation/middlewares/errorHandler.middleware.js';
-import { AuthRoutes } from '@features/auth/presentation/routes/auth.routes.js';
+import { toNodeHandler } from 'better-auth/node';
+import { auth } from '@core/infrastructure/auth/better-auth.config.js';
 import { TaxonomiaRoutes } from '@features/taxonomia/presentation/routes/taxonomia.routes.js';
 import { StorageRoutes } from '@features/storage/presentation/routes/storage.routes.js';
 import { NegociosRoutes } from '@features/negocios/presentation/routes/negocios.routes.js';
@@ -67,8 +68,9 @@ export const createApp = (): Express => {
     res.status(200).json({ ok: true, service: 'mi-alberdi-api', status: 'healthy' });
   });
 
-  // Rutas de Módulos (Features)
-  app.use('/api/auth', AuthRoutes());
+  // Rutas de Autenticación (Better Auth)
+  app.all('/api/auth', toNodeHandler(auth));
+  app.all('/api/auth/*', toNodeHandler(auth));
   app.use('/api/taxonomia', TaxonomiaRoutes());
   app.use('/api/storage', StorageRoutes());
   app.use('/api/negocios', NegociosRoutes());
