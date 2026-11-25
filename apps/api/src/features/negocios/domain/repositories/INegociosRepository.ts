@@ -1,6 +1,8 @@
 import type {
+  ActualizarNegocioInput,
   AltaNegocioWizardInput,
   ConfigurarHorariosSemanaInput,
+  CrearNegocioInput,
   CreateNegocioInput,
   CreateSucursalInput,
   HorarioNegocioDTO,
@@ -23,7 +25,7 @@ export interface INegociosRepository {
 
   createSimple(
     propietarioId: string,
-    input: CreateNegocioInput,
+    input: CreateNegocioInput | CrearNegocioInput,
     slug: string,
     qrCodeToken: string,
   ): Promise<NegocioDTO>;
@@ -31,7 +33,7 @@ export interface INegociosRepository {
   findById(id: string): Promise<NegocioDTO | null>;
   findBySlug(slug: string): Promise<NegocioPublicoDTO | null>;
   findByPropietarioId(propietarioId: string): Promise<NegocioResumenDTO[]>;
-  update(id: string, input: UpdateNegocioInput): Promise<NegocioDTO>;
+  update(id: string, input: UpdateNegocioInput | ActualizarNegocioInput): Promise<NegocioDTO>;
   slugExists(slug: string): Promise<boolean>;
 
   // Sucursales
@@ -53,4 +55,3 @@ export interface INegociosRepository {
     metodos: { metodoPagoId: string; detalle?: string | null }[],
   ): Promise<NegocioMetodoPagoDTO[]>;
 }
-
