@@ -31,6 +31,7 @@
  *     summary: Alta completa de negocio mediante el Wizard de Onboarding
  *     tags: [Negocios]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     requestBody:
  *       required: true
@@ -52,7 +53,7 @@
  *                 properties:
  *                   tipoPerfil:
  *                     type: string
- *                     enum: [comercio, oficio_independiente, servicio_profesional, emprendimiento]
+ *                     enum: [comercio, oficio, profesional, emprendimiento]
  *                     example: comercio
  *                   rubroPrincipalId:
  *                     type: string
@@ -75,7 +76,7 @@
  *                     example: "Hola, te vi en Mi Alberdi y quería consultar por..."
  *                   modalidadPrincipal:
  *                     type: string
- *                     enum: [horarios_fijos, cita_previa, urgencias_24hs]
+ *                     enum: [horarios_fijos, por_turnos, por_pedido, atencion_24hs, solo_whatsapp]
  *                     example: horarios_fijos
  *                   atiendeADomicilio:
  *                     type: boolean
@@ -85,7 +86,7 @@
  *                     example: true
  *                   alcanceEnvios:
  *                     type: string
- *                     enum: [sin_envio, solo_alberdi, alberdi_y_zonas_cercanas, todo_el_pais]
+ *                     enum: [sin_envio, solo_alberdi, alberdi_y_alrededores, todo_el_pais]
  *                     example: solo_alberdi
  *               ubicacionPrincipal:
  *                 type: object
@@ -159,75 +160,114 @@
  * @openapi
  * /api/negocios:
  *   post:
- *     summary: Alta simple de negocio (sin wizard)
+ *     summary: Alta de comercio u oficio (HU-03, soporta JSON y multipart/form-data con logo y banner)
  *     tags: [Negocios]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nombre
+ *               - tipo
+ *               - telefono
+ *               - direccion
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 100
+ *                 example: "Ferretería San Martín"
+ *               tipo:
+ *                 type: string
+ *                 enum: [COMERCIO, OFICIO]
+ *                 example: COMERCIO
+ *               telefono:
+ *                 type: string
+ *                 example: "+5493865123456"
+ *               direccion:
+ *                 type: string
+ *                 minLength: 5
+ *                 maxLength: 200
+ *                 example: "Av. Campero 450, Alberdi"
+ *               descripcion:
+ *                 type: string
+ *                 example: "Herramientas, electricidad y materiales para el hogar."
+ *               instagram:
+ *                 type: string
+ *                 example: "@ferreteria.sanmartin"
+ *               logo:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen de logo (.jpg, .jpeg, .png, .webp - máx. 2MB)
+ *               banner:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen de banner (.jpg, .jpeg, .png, .webp - máx. 2MB)
  *         application/json:
  *           schema:
  *             type: object
  *             required:
- *               - tipoPerfil
- *               - rubroPrincipalId
- *               - nombreComercial
- *               - whatsappPrincipal
+ *               - nombre
+ *               - tipo
+ *               - telefono
+ *               - direccion
  *             properties:
- *               tipoPerfil:
- *                 type: string
- *                 enum: [comercio, oficio_independiente, servicio_profesional, emprendimiento]
- *                 example: comercio
- *               rubroPrincipalId:
- *                 type: string
- *                 format: uuid
- *                 example: "2b7e1fe4-349a-4643-8ffd-7d47e9e0f398"
- *               nombreComercial:
+ *               nombre:
  *                 type: string
  *                 example: "Rotisería Alberdi"
+ *               tipo:
+ *                 type: string
+ *                 enum: [COMERCIO, OFICIO]
+ *                 example: COMERCIO
+ *               telefono:
+ *                 type: string
+ *                 example: "+5493865123456"
+ *               direccion:
+ *                 type: string
+ *                 example: "Av. San Martín 320"
  *               descripcion:
  *                 type: string
  *                 example: "Comidas caseras para llevar y delivery en Alberdi."
- *               eslogan:
+ *               instagram:
  *                 type: string
- *                 example: "El sabor de casa todos los días"
- *               whatsappPrincipal:
+ *                 example: "@rotiseria.alberdi"
+ *               logoUrl:
  *                 type: string
- *                 example: "+5493865123456"
- *               atiendeADomicilio:
- *                 type: boolean
- *                 example: false
- *               haceEnvios:
- *                 type: boolean
- *                 example: true
- *               alcanceEnvios:
+ *                 example: "/uploads/negocios/logos/ejemplo.webp"
+ *               bannerUrl:
  *                 type: string
- *                 enum: [sin_envio, solo_alberdi, alberdi_y_zonas_cercanas, todo_el_pais]
- *                 example: solo_alberdi
- *               metodosPagoIds:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: uuid
+ *                 example: "/uploads/negocios/banners/ejemplo.webp"
+ *               rubroPrincipalId:
+ *                 type: string
+ *                 format: uuid
  *     responses:
  *       201:
- *         description: Negocio creado exitosamente
+ *         description: Perfil comercial creado exitosamente (retorna NegocioResponseDto sanitizado)
  *       400:
- *         description: Validación fallida
+ *         description: Error de validación Zod, extensión de archivo no permitida o archivo mayor a 2MB
+ *       401:
+ *         description: No autenticado
  */
 
 /**
  * @openapi
- * /api/negocios/mis-negocios:
+ * /api/negocios/mis-comercios:
  *   get:
- *     summary: Listar todos los perfiles de negocios del usuario autenticado
+ *     summary: Listar todos los comercios u oficios pertenecientes al comerciante autenticado (HU-03 1:N)
  *     tags: [Negocios]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Perfiles obtenidos exitosamente
+ *         description: Lista de comercios propios (NegocioResponseDto[]) obtenida exitosamente
+ *       401:
+ *         description: No autenticado
  */
 
 /**
@@ -237,6 +277,7 @@
  *     summary: Obtener el detalle administrativo de un negocio propio por ID
  *     tags: [Negocios]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
@@ -256,9 +297,10 @@
  * @openapi
  * /api/negocios/{negocioId}:
  *   put:
- *     summary: Actualizar la información principal de un negocio
+ *     summary: Actualizar la información y assets de un comercio u oficio propio (HU-03, soporta JSON y multipart/form-data)
  *     tags: [Negocios]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
@@ -270,36 +312,73 @@
  *     requestBody:
  *       required: true
  *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 example: "Rotisería Alberdi Centro"
+ *               tipo:
+ *                 type: string
+ *                 enum: [COMERCIO, OFICIO]
+ *               telefono:
+ *                 type: string
+ *                 example: "+5493865123456"
+ *               direccion:
+ *                 type: string
+ *                 example: "Av. Campero 510"
+ *               descripcion:
+ *                 type: string
+ *                 example: "Viandas diarias y platos especiales de fin de semana."
+ *               instagram:
+ *                 type: string
+ *                 example: "@rotiseria.alberdi"
+ *               logo:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen de logo (.jpg, .jpeg, .png, .webp - máx. 2MB)
+ *               banner:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen de banner (.jpg, .jpeg, .png, .webp - máx. 2MB)
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               nombreComercial:
+ *               nombre:
  *                 type: string
  *                 example: "Rotisería Alberdi Centro"
+ *               tipo:
+ *                 type: string
+ *                 enum: [COMERCIO, OFICIO]
+ *               telefono:
+ *                 type: string
+ *                 example: "+5493865123456"
+ *               direccion:
+ *                 type: string
+ *                 example: "Av. Campero 510"
  *               descripcion:
  *                 type: string
  *                 example: "Viandas diarias y platos especiales de fin de semana."
- *               eslogan:
+ *               instagram:
  *                 type: string
- *                 example: "Sabor tradicional"
+ *                 example: "@rotiseria.alberdi"
  *               logoUrl:
  *                 type: string
  *               bannerUrl:
  *                 type: string
- *               whatsappPrincipal:
- *                 type: string
- *                 example: "+5493865123456"
- *               atiendeADomicilio:
- *                 type: boolean
- *               haceEnvios:
- *                 type: boolean
- *               alcanceEnvios:
- *                 type: string
- *                 enum: [sin_envio, solo_alberdi, alberdi_y_zonas_cercanas, todo_el_pais]
  *     responses:
  *       200:
  *         description: Negocio actualizado exitosamente
+ *       400:
+ *         description: Error de validación o formato/tamaño de archivo inválido
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: Intento de editar un negocio perteneciente a otro usuario
+ *       404:
+ *         description: Negocio no encontrado
  */
 
 /**
@@ -309,6 +388,7 @@
  *     summary: Agregar una sucursal adicional al negocio respetando límites del plan
  *     tags: [Negocios]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
@@ -360,6 +440,7 @@
  *     summary: Actualizar los datos de una sucursal
  *     tags: [Negocios]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
@@ -405,6 +486,7 @@
  *     summary: Eliminar una sucursal secundaria (no permite borrar la casa central)
  *     tags: [Negocios]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
@@ -433,6 +515,7 @@
  *     summary: Configurar los horarios semanales del negocio o sucursal (soporte siesta)
  *     tags: [Negocios]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
@@ -496,6 +579,7 @@
  *     summary: Vincular los métodos de pago aceptados por el comercio
  *     tags: [Negocios]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     parameters:
  *       - in: path

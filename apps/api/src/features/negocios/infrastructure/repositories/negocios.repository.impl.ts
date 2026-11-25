@@ -465,6 +465,8 @@ export class NegociosRepositoryImpl implements INegociosRepository {
         tipoPerfil: n.tipoPerfil,
         nombreComercial: n.nombreComercial,
         eslogan: n.eslogan,
+        descripcion: n.descripcion,
+        instagramHandle: n.instagramHandle,
         logoUrl: n.logoUrl,
         bannerUrl: n.bannerUrl,
         rubroPrincipalId: n.rubroPrincipalId,
@@ -483,6 +485,8 @@ export class NegociosRepositoryImpl implements INegociosRepository {
         alcanceEnvios: n.alcanceEnvios,
         direccionPrincipalResumen: uPrincipal?.direccionEscrita,
         barrioPrincipal: uPrincipal?.barrio,
+        creadoEn: n.creadoEn.toISOString(),
+        actualizadoEn: n.actualizadoEn.toISOString(),
       };
     });
   }
