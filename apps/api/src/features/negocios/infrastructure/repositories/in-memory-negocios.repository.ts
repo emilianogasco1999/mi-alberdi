@@ -206,6 +206,8 @@ export class InMemoryNegociosRepository implements INegociosRepository {
           tipoPerfil: n.tipoPerfil,
           nombreComercial: n.nombreComercial,
           eslogan: n.eslogan,
+          descripcion: n.descripcion,
+          instagramHandle: n.instagramHandle,
           logoUrl: n.logoUrl,
           bannerUrl: n.bannerUrl,
           rubroPrincipalId: n.rubroPrincipalId,
@@ -222,6 +224,8 @@ export class InMemoryNegociosRepository implements INegociosRepository {
           alcanceEnvios: n.alcanceEnvios,
           direccionPrincipalResumen: principal?.direccionEscrita,
           barrioPrincipal: principal?.barrio ?? null,
+          creadoEn: n.creadoEn,
+          actualizadoEn: n.actualizadoEn,
         });
       }
     }

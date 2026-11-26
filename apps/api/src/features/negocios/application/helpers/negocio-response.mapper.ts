@@ -49,6 +49,7 @@ export const resumenToNegocioResponseDto = (
 ): NegocioResponseDto => {
   const direccion = resumen.direccionPrincipalResumen ?? 'Juan Bautista Alberdi, Tucumán';
   const now = new Date().toISOString();
+  const instagram = resumen.instagramHandle ?? null;
 
   return {
     id: resumen.id,
@@ -61,15 +62,15 @@ export const resumenToNegocioResponseDto = (
     whatsappPrincipal: resumen.whatsappPrincipal,
     direccion,
     direccionEscrita: direccion,
-    descripcion: resumen.eslogan ?? null,
-    instagram: null,
-    instagramHandle: null,
+    descripcion: resumen.descripcion !== undefined ? resumen.descripcion : (resumen.eslogan ?? null),
+    instagram,
+    instagramHandle: instagram,
     logoUrl: resumen.logoUrl,
     bannerUrl: resumen.bannerUrl,
     rubroPrincipalId: resumen.rubroPrincipalId,
     estado: resumen.estado,
     planActual: resumen.planActual,
-    creadoEn: now,
-    actualizadoEn: now,
+    creadoEn: resumen.creadoEn ?? now,
+    actualizadoEn: resumen.actualizadoEn ?? now,
   };
 };

@@ -90,6 +90,8 @@ export interface NegocioResumenDTO {
   tipoPerfil: TipoPerfilComercial;
   nombreComercial: string;
   eslogan: string | null;
+  descripcion?: string | null;
+  instagramHandle?: string | null;
   logoUrl: string | null;
   bannerUrl: string | null;
   rubroPrincipalId: string;
@@ -108,6 +110,8 @@ export interface NegocioResumenDTO {
   alcanceEnvios: AlcanceEnvio;
   direccionPrincipalResumen?: string;
   barrioPrincipal?: string | null;
+  creadoEn?: string;
+  actualizadoEn?: string;
 }
 
 export interface NegocioDTO {
