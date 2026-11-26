@@ -53,12 +53,22 @@ export const createApp = (): Express => {
           bearerAuth: {
             type: 'http',
             scheme: 'bearer',
-            bearerFormat: 'JWT',
+            bearerFormat: 'Session Token / Bearer',
+            description: 'Token de sesión de Better Auth o Bearer token',
+          },
+          cookieAuth: {
+            type: 'apiKey',
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            description: 'Cookie de sesión HttpOnly gestionada por Better Auth',
           },
         },
       },
     },
-    apis: ['./src/features/**/presentation/docs/*.ts'],
+    apis: [
+      './src/features/**/presentation/docs/*.ts',
+      './apps/api/src/features/**/presentation/docs/*.ts',
+    ],
   });
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
