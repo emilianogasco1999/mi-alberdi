@@ -102,8 +102,8 @@ export function CredencialesModal({ credenciales, onClose }: CredencialesModalPr
             <p>Esta contraseña no volverá a mostrarse</p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row-reverse">
-            <Button type="button" onClick={handleCopiar} className="flex-1">
+          <div className="flex flex-col gap-3">
+            <Button type="button" onClick={handleCopiar} className="w-full">
               {estadoCopiado === 'copiado' ? (
                 <Check className="h-4 w-4" aria-hidden="true" />
               ) : (
@@ -111,7 +111,7 @@ export function CredencialesModal({ credenciales, onClose }: CredencialesModalPr
               )}
               {estadoCopiado === 'copiado' ? '¡Copiado!' : 'Copiar credenciales'}
             </Button>
-            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+            <Button type="button" variant="outline" onClick={handleClose} className="w-full">
               Cerrar y crear otra
             </Button>
           </div>
