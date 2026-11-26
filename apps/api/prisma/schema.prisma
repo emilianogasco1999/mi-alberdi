@@ -148,45 +148,94 @@ enum EstadoModeracion {
 // 1. IDENTIDAD Y ACCESO
 // =============================================================================
 
-model PerfilUsuario {
-  id                 String       @id @default(uuid()) @db.Uuid
-  nombre             String       @db.VarChar(80)
-  apellido           String?      @db.VarChar(80)
-  email              String       @unique @db.VarChar(255)
-  passwordHash       String       @map("password_hash")
-  telefono           String?      @db.VarChar(30)
-  avatarUrl          String?      @map("avatar_url")
-  rol                RolUsuario   @default(vecino)
-  estado             EstadoCuenta @default(activo)
-  puedeProbarPremium Boolean      @default(true) @map("puede_probar_premium")
-  tokenVersion       Int          @default(0) @map("token_version")
-  creadoEn           DateTime     @default(now()) @map("creado_en") @db.Timestamptz(6)
-  actualizadoEn      DateTime     @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+model User {
+  id                 String    @id
+  name               String    @db.VarChar(80)
+  email              String    @unique @db.VarChar(255)
+  emailVerified      Boolean   @default(false) @map("email_verified")
+  image              String?   @map("image")
+  role               String?   @default("vecino") @db.VarChar(30)
+  banned             Boolean?  @default(false)
+  banReason          String?   @map("ban_reason")
+  banExpires         DateTime? @map("ban_expires")
+  telefono           String?   @db.VarChar(30)
+  puedeProbarPremium Boolean   @default(true) @map("puede_probar_premium")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  negocios                   Negocio[]
-  auditoriasAcceso           AuditoriaAcceso[]
-  pagosMembresia             PagoMembresia[]
-  opiniones                  Opinion[]
-  solicitudesVerificacion    SolicitudVerificacion[] @relation("SolicitanteVerificacion")
-  verificacionesRevisadas    SolicitudVerificacion[] @relation("RevisorVerificacion")
-  reportesRealizados         ReporteModeracion[]     @relation("ReportanteModeracion")
-  reportesRevisados          ReporteModeracion[]     @relation("RevisorModeracion")
-  feedbacksEnviados          FeedbackPlataforma[]
+  sessions                Session[]
+  accounts                Account[]
+  negocios                Negocio[]
+  auditoriasAcceso        AuditoriaAcceso[]
+  pagosMembresia          PagoMembresia[]
+  opiniones               Opinion[]
+  solicitudesVerificacion SolicitudVerificacion[] @relation("SolicitanteVerificacion")
+  verificacionesRevisadas SolicitudVerificacion[] @relation("RevisorVerificacion")
+  reportesRealizados      ReporteModeracion[]     @relation("ReportanteModeracion")
+  reportesRevisados       ReporteModeracion[]     @relation("RevisorModeracion")
+  feedbacksEnviados       FeedbackPlataforma[]
 
-  @@index([rol])
-  @@index([estado])
-  @@map("perfiles_usuarios")
+  @@index([role])
+  @@map("user")
+}
+
+model Session {
+  id             String    @id
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(6)
+  token          String    @unique
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  ipAddress      String?   @map("ip_address") @db.VarChar(64)
+  userAgent      String?   @map("user_agent")
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impersonatedBy String?   @map("impersonated_by")
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(6)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([identifier])
+  @@map("verification")
 }
 
 model AuditoriaAcceso {
-  id              String        @id @default(uuid()) @db.Uuid
-  usuarioId       String        @map("usuario_id") @db.Uuid
-  ipAddress       String?       @map("ip_address") @db.VarChar(64)
-  userAgent       String?       @map("user_agent")
-  dispositivoHash String?       @map("dispositivo_hash") @db.VarChar(128)
-  creadoEn        DateTime      @default(now()) @map("creado_en") @db.Timestamptz(6)
+  id              String   @id @default(uuid()) @db.Uuid
+  usuarioId       String   @map("usuario_id")
+  ipAddress       String?  @map("ip_address") @db.VarChar(64)
+  userAgent       String?  @map("user_agent")
+  dispositivoHash String?  @map("dispositivo_hash") @db.VarChar(128)
+  creadoEn        DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
 
-  usuario PerfilUsuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuario User @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@index([usuarioId, creadoEn])
   @@map("auditoria_accesos")
@@ -249,7 +298,7 @@ model PagoMembresia {
   id                String     @id @default(uuid()) @db.Uuid
   membresiaId       String     @map("membresia_id") @db.Uuid
   negocioId         String     @map("negocio_id") @db.Uuid
-  usuarioId         String     @map("usuario_id") @db.Uuid
+  usuarioId         String     @map("usuario_id")
   montoArs          Decimal    @map("monto_ars") @db.Decimal(10, 2)
   pasarela          String     @default("mercadopago") @db.VarChar(30)
   referenciaExterna String?    @unique @map("referencia_externa") @db.VarChar(120)
@@ -260,9 +309,9 @@ model PagoMembresia {
   creadoEn          DateTime   @default(now()) @map("creado_en") @db.Timestamptz(6)
   actualizadoEn     DateTime   @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  membresia Membresia     @relation(fields: [membresiaId], references: [id], onDelete: Cascade)
-  negocio   Negocio       @relation(fields: [negocioId], references: [id], onDelete: Cascade)
-  usuario   PerfilUsuario @relation(fields: [usuarioId], references: [id])
+  membresia Membresia @relation(fields: [membresiaId], references: [id], onDelete: Cascade)
+  negocio   Negocio   @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  usuario   User      @relation(fields: [usuarioId], references: [id])
 
   @@index([negocioId, estado])
   @@map("pagos_membresia")
@@ -349,7 +398,7 @@ model MetodoPagoCatalogo {
 
 model Negocio {
   id                   String              @id @default(uuid()) @db.Uuid
-  propietarioId        String              @map("propietario_id") @db.Uuid
+  propietarioId        String              @map("propietario_id")
   tipoPerfil           TipoPerfilComercial @default(comercio) @map("tipo_perfil")
   rubroPrincipalId     String              @map("rubro_principal_id") @db.Uuid
   slug                 String              @unique @db.VarChar(120)
@@ -402,7 +451,7 @@ model Negocio {
   creadoEn              DateTime                 @default(now()) @map("creado_en") @db.Timestamptz(6)
   actualizadoEn         DateTime                 @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  propietario             PerfilUsuario           @relation(fields: [propietarioId], references: [id], onDelete: Cascade)
+  propietario             User                    @relation(fields: [propietarioId], references: [id], onDelete: Cascade)
   rubroPrincipal          RubroGrupo              @relation(fields: [rubroPrincipalId], references: [id])
   plan                    PlanCatalogo            @relation(fields: [planActual], references: [codigo])
   ubicaciones             UbicacionNegocio[]
@@ -572,7 +621,7 @@ model Opinion {
   id                   String    @id @default(uuid()) @db.Uuid
   negocioId            String    @map("negocio_id") @db.Uuid
   publicacionId        String?   @map("publicacion_id") @db.Uuid
-  usuarioId            String?   @map("usuario_id") @db.Uuid
+  usuarioId            String?   @map("usuario_id")
   dispositivoId        String?   @map("dispositivo_id") @db.VarChar(128)
   nombreAutorVisible   String    @map("nombre_autor_visible") @db.VarChar(80)
   puntuacion           Int       @db.SmallInt
@@ -586,7 +635,7 @@ model Opinion {
 
   negocio            Negocio             @relation(fields: [negocioId], references: [id], onDelete: Cascade)
   publicacion        Publicacion?        @relation(fields: [publicacionId], references: [id], onDelete: SetNull)
-  usuario            PerfilUsuario?      @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  usuario            User?               @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
   reportesModeracion ReporteModeracion[]
 
   @@index([negocioId, visible, creadoEn])
@@ -622,20 +671,20 @@ model EventoAnalitica {
 model SolicitudVerificacion {
   id                     String             @id @default(uuid()) @db.Uuid
   negocioId              String             @map("negocio_id") @db.Uuid
-  solicitanteId          String             @map("solicitante_id") @db.Uuid
+  solicitanteId          String             @map("solicitante_id")
   documentoFrenteUrl     String?            @map("documento_frente_url")
   comprobanteComercioUrl String?            @map("comprobante_comercio_url")
   notasSolicitante       String?            @map("notas_solicitante")
   estado                 EstadoVerificacion @default(pendiente)
-  revisadoPorId          String?            @map("revisado_por") @db.Uuid
+  revisadoPorId          String?            @map("revisado_por")
   motivoRechazo          String?            @map("motivo_rechazo")
   resueltoEn             DateTime?          @map("resuelto_en") @db.Timestamptz(6)
   creadoEn               DateTime           @default(now()) @map("creado_en") @db.Timestamptz(6)
   actualizadoEn          DateTime           @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  negocio     Negocio        @relation(fields: [negocioId], references: [id], onDelete: Cascade)
-  solicitante PerfilUsuario  @relation("SolicitanteVerificacion", fields: [solicitanteId], references: [id])
-  revisadoPor PerfilUsuario? @relation("RevisorVerificacion", fields: [revisadoPorId], references: [id])
+  negocio     Negocio @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  solicitante User    @relation("SolicitanteVerificacion", fields: [solicitanteId], references: [id])
+  revisadoPor User?   @relation("RevisorVerificacion", fields: [revisadoPorId], references: [id])
 
   @@index([estado, creadoEn])
   @@index([negocioId])
@@ -647,21 +696,21 @@ model ReporteModeracion {
   negocioId       String?          @map("negocio_id") @db.Uuid
   publicacionId   String?          @map("publicacion_id") @db.Uuid
   opinionId       String?          @map("opinion_id") @db.Uuid
-  reportanteId    String?          @map("reportante_id") @db.Uuid
+  reportanteId    String?          @map("reportante_id")
   dispositivoHash String?          @map("dispositivo_hash") @db.VarChar(128)
   motivo          String           @db.VarChar(80)
   detalle         String?
   estado          EstadoModeracion @default(pendiente)
-  revisadoPorId   String?          @map("revisado_por") @db.Uuid
+  revisadoPorId   String?          @map("revisado_por")
   resolucionNota  String?          @map("resolucion_nota")
   creadoEn        DateTime         @default(now()) @map("creado_en") @db.Timestamptz(6)
   actualizadoEn   DateTime         @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  negocio     Negocio?       @relation(fields: [negocioId], references: [id], onDelete: Cascade)
-  publicacion Publicacion?   @relation(fields: [publicacionId], references: [id], onDelete: Cascade)
-  opinion     Opinion?       @relation(fields: [opinionId], references: [id], onDelete: Cascade)
-  reportante  PerfilUsuario? @relation("ReportanteModeracion", fields: [reportanteId], references: [id])
-  revisadoPor PerfilUsuario? @relation("RevisorModeracion", fields: [revisadoPorId], references: [id])
+  negocio     Negocio?     @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  publicacion Publicacion? @relation(fields: [publicacionId], references: [id], onDelete: Cascade)
+  opinion     Opinion?     @relation(fields: [opinionId], references: [id], onDelete: Cascade)
+  reportante  User?        @relation("ReportanteModeracion", fields: [reportanteId], references: [id])
+  revisadoPor User?        @relation("RevisorModeracion", fields: [revisadoPorId], references: [id])
 
   @@index([estado, creadoEn])
   @@map("reportes_moderacion")
@@ -669,7 +718,7 @@ model ReporteModeracion {
 
 model FeedbackPlataforma {
   id             String   @id @default(uuid()) @db.Uuid
-  usuarioId      String?  @map("usuario_id") @db.Uuid
+  usuarioId      String?  @map("usuario_id")
   nombreCompleto String?  @map("nombre_completo") @db.VarChar(120)
   email          String?  @db.VarChar(255)
   mensaje        String
@@ -679,16 +728,16 @@ model FeedbackPlataforma {
   leido          Boolean  @default(false)
   creadoEn       DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
 
-  usuario PerfilUsuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  usuario User? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
 
   @@map("feedback_plataforma")
 }
 
 model ConfiguracionSistema {
-  id                            Int      @id @default(1) @db.SmallInt
-  modoMantenimiento             Boolean  @default(false) @map("modo_mantenimiento")
-  mensajeMantenimiento          String?  @map("mensaje_mantenimiento")
-  usuariosExcluidosMantenimiento String[] @default([]) @map("usuarios_excluidos_mantenimiento") @db.Uuid
+  id                             Int      @id @default(1) @db.SmallInt
+  modoMantenimiento              Boolean  @default(false) @map("modo_mantenimiento")
+  mensajeMantenimiento           String?  @map("mensaje_mantenimiento")
+  usuariosExcluidosMantenimiento String[] @default([]) @map("usuarios_excluidos_mantenimiento")
   semillaRotacionRanking        Int      @default(1) @map("semilla_rotacion_ranking")
   versionMinimaPwa              String?  @map("version_minima_pwa") @db.VarChar(20)
   actualizadoEn                 DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)

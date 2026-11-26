@@ -1,242 +1,645 @@
+//// ===========================================================================
+//// MI ALBERDI — Diagrama de Base de Datos (DBML)
+//// Plataforma de descubrimiento comercial, oficios y servicios para Juan Bautista Alberdi
 //// Docs: https://dbml.dbdiagram.io/docs
-//// -- LEVEL 1
-//// -- Schemas, Tables and References
+//// ===========================================================================
 
-// Creating tables
-// You can define the tables with full schema names
-Table ecommerce.merchants {
-id int [unique]
-~country_code
-merchant_name varchar
-
-"created at" varchar
-admin_id int [ref: ?> U.id, not null]
-
-Indexes {
-(id, country_code) [pk]
-}
+Project mi_alberdi {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Mi Alberdi — Arquitectura de Datos V1.2 (Better Auth Canonical)
+    Evolución superadora sobre el estudio de GoyaNova y migración a Better Auth:
+    1. Separación limpia entre **Negocio / Perfil Comercial** (`negocios`) y **Publicación** (`publicaciones`), eliminando la tabla monolítica de 42 columnas.
+    2. Adopción del modelo canónico de **Better Auth** (`user`, `session`, `account`, `verification`), retirando `perfiles_usuarios` e integrando atributos de dominio (`telefono`, `puede_probar_premium`) directamente en `user`.
+    3. Distinción nativa entre **Comercio**, **Oficio**, **Profesional** y **Emprendimiento** (`tipo_perfil_comercial`), permitiendo que 1 usuario cree múltiples perfiles (ej: su comercio y su oficio).
+    4. Modelo de **Planes en el Negocio** (Gratis $0, Plata $1.500, Oro $2.500) con **Cupos de Destacados** asignables a publicaciones y **Cupo de Sucursales** (`max_sucursales`: Gratis=1, Plata=3, Oro=10).
+    5. Trazabilidad comercial real (`eventos_analitica`) para demostrar ROI al comerciante (clics a WhatsApp, escaneos QR, vistas).
+    6. Seguridad por diseño: sesiones seguras, RBAC nativo en Better Auth y moderación aislada de las entidades de lectura pública.
+  '''
 }
 
-// If schema name is omitted, it will default to "public" schema.
-// Custom properties: any key you want, inline in the settings
-Table users as U [owner: "identity-team", pii: "true"] {
-id int [pk, increment] // auto-increment
-full_name varchar [classification: "confidential"]
-created_at timestamp
-~country_code
+// =============================================================================
+// PARTIALS (Bloques reutilizables)
+// =============================================================================
+
+TablePartial uuid_pk {
+  id uuid [pk, default: `gen_random_uuid()`]
 }
 
-Table countries {
-code int [pk]
-name varchar
-continent_name varchar
+TablePartial timestamps {
+  creado_en timestamptz [not null, default: `now()`]
+  actualizado_en timestamptz [not null, default: `now()`]
 }
 
-TablePartial country_code {
-country_code int [not null, ref: ?> countries.code]
+// =============================================================================
+// ENUMS (Tipos de dominio)
+// =============================================================================
+
+Enum rol_usuario {
+  vecino       [note: 'Usuario estándar que navega, guarda favoritos o reseña']
+  comerciante  [note: 'Dueño de al menos un negocio u oficio activo']
+  moderador    [note: 'Staff encargado de verificaciones y reportes']
+  admin        [note: 'Administrador total del sistema']
 }
 
-//----------------------------------------------//
-
-//// -- LEVEL 2
-//// -- Adding column settings
-
-Table ecommerce.order_items {
-order_id int [not null, ref: ?> ecommerce.orders.id] // inline relationship (many-to-one)
-product_id int [not null]
-quantity int [default: 1, check: `quantity > 0`, note: 'Quantity should be at least 1']
-
-Indexes {
-(order_id, product_id) [pk]
-}
+Enum estado_cuenta {
+  activo
+  suspendido
+  pendiente_eliminacion
 }
 
-Ref: ecommerce.order_items.product_id ?> ecommerce.products.id
-
-Table ecommerce.orders {
-~auto_id
-user_id int [not null]
-status varchar [check: `status in ('pending', 'completed', 'cancelled')`]
-created_at varchar [note: 'When order created'] // add column note
+Enum codigo_plan {
+  gratis [note: '$0 ARS - hasta 2 publicaciones, 0 destacados, 1 ubicación (sin sucursales extra)']
+  plata  [note: '$1.500 ARS - hasta 10 publicaciones, 1 destacado, hasta 3 sucursales, pin mapa, verificado, stats, 1 reel']
+  oro    [note: '$2.500 ARS - publicaciones ilimitadas, 3 destacados, hasta 10 sucursales, reels avanzados, IA, banner']
 }
 
-//----------------------------------------------//
-
-//// -- Level 3
-//// -- Enum, Indexes
-
-// Enum for 'products' table below
-Enum ecommerce.products_status {
-out_of_stock
-in_stock
-running_low [note: 'less than 20'] // add column note
+Enum tipo_perfil_comercial {
+  comercio        [note: 'Local físico a la calle (ferretería, farmacia, tienda, pizzería)']
+  oficio          [note: 'Trabajador independiente (plomero, gasista, electricista, albañil, flete)']
+  profesional     [note: 'Servicio profesional con matrícula o turno (abogado, contador, kinesiólogo, docente)']
+  emprendimiento  [note: 'Elaboración propia o venta desde casa / redes (pastelería, artesanías, viandas)']
 }
 
-// Indexes: You can define a single or multi-column index
-Table ecommerce.products [owner: "catalog-team"] {
-~auto_id
-name varchar
-merchant_id int [not null]
-price int [check: `price >= 0`, note: 'Price should be non-negative']
-status ecommerce.products_status
-created_at datetime [default: `now()`]
-
-Indexes {
-(merchant_id, status) [name:'product_status']
-id [unique]
-}
+Enum estado_negocio {
+  borrador
+  activo
+  pausado
+  suspendido [note: 'Bloqueado por moderación']
 }
 
-Table ecommerce.product_tags {
-~auto_id
-name varchar
+Enum estado_verificacion {
+  no_solicitada
+  pendiente
+  aprobada
+  rechazada
 }
 
-Table ecommerce.merchant_periods {
-~auto_id
-merchant_id int
-~country_code
-start_date datetime
-end_date datetime
-
-Checks {
-`start_date < end_date`
-}
+Enum tipo_publicacion {
+  servicio
+  producto
 }
 
-TablePartial auto_id {
-id int [pk]
+Enum estado_publicacion {
+  borrador
+  activa
+  pausada
+  pausada_por_plan     [note: 'Se pausa automáticamente si el negocio baja de plan y supera el cupo']
+  oculta_por_reportes  [note: 'Auto-moderación preventiva al superar umbral de denuncias']
+  suspendida
 }
 
-// Creating references
-// You can also define relationship separately
-// > many-to-one; < one-to-many; - one-to-one; <> many-to-many
-Ref: ecommerce.products.merchant_id ?> ecommerce.merchants.id // many-to-one
-Ref: ecommerce.product_tags.id - ecommerce.products.id // many-to-many
-
-// Composite foreign key
-Ref: ecommerce.merchant_periods.(merchant_id, country_code) > ecommerce.merchants.(id, country_code)
-Ref user_orders: ecommerce.orders.user_id > public.users.id
-
-//----------------------------------------------//
-
-//// -- Level 4
-//// -- Custom properties
-
-// Properties can also be declared away from the table, in a Metadata block.
-// They live in the DBML file, so scripts can read them, and you can filter
-// the diagram by them from the table search panel.
-Metadata Table ecommerce.products {
-domain: 'product'
-source_system: 'merchant-portal'
+Enum modalidad_atencion {
+  horarios_fijos [note: 'Comercio con apertura y cierre por día']
+  por_turnos     [note: 'Profesional u oficio con agenda reservable']
+  por_pedido     [note: 'Gastronomía o emprendimiento con encargo previo']
+  atencion_24hs  [note: 'Urgencias / guardias']
+  solo_whatsapp  [note: 'Coordinación libre directa']
 }
 
-Metadata Column users.created_at {
-retention: '7 years'
+Enum alcance_envio {
+  sin_envio
+  solo_alberdi          [note: 'Radio urbano de Juan Bautista Alberdi']
+  alberdi_y_alrededores [note: 'Localidades vecinas / zona rural']
+  todo_el_pais
 }
 
-//----------------------------------------------//
-
-Records countries (code, name, continent_name) {
-1, 'United States', 'North America'
-44, 'United Kingdom', 'Europe'
-81, 'Japan', 'Asia'
-84, 'Vietnam', 'Asia'
-91, 'India', 'Asia'
-61, 'Australia', 'Oceania'
-49, 'Germany', 'Europe'
-33, 'France', 'Europe'
-65, 'Singapore', 'Asia'
-82, 'South Korea', 'Asia'
+Enum estado_membresia {
+  activa
+  en_prueba
+  vencida
+  cancelada
 }
 
-Records users (id, full_name, created_at, country_code) {
-1, 'Alice Johnson', '2024-01-10 09:00:00', 1
-2, 'Bob Smith', '2024-01-12 10:30:00', 44
-3, 'Charlie Nguyen', '2024-01-15 14:20:00', 84
-4, 'Diana Sato', '2024-01-18 08:45:00', 81
-5, 'Ethan Brown', '2024-01-20 16:10:00', 1
-6, 'Fatima Khan', '2024-01-22 11:05:00', 91
-7, 'George Miller', '2024-01-25 13:40:00', 61
-8, 'Hannah Lee', '2024-01-28 17:25:00', 82
-9, 'Ivan Petrov', '2024-02-01 12:00:00', 49
-10, 'Julia Martin', '2024-02-03 15:15:00', 33
+Enum estado_pago {
+  pendiente
+  aprobado
+  rechazado
+  reembolsado
 }
 
-Records ecommerce.merchants (id, country_code, merchant_name, "created at", admin_id) {
-1, 1, 'BlueCart US', '2024-01-05 09:00:00', 1
-2, 44, 'London Goods', '2024-01-06 10:00:00', 2
-3, 84, 'Saigon Fresh', '2024-01-07 11:00:00', 3
-4, 81, 'Tokyo Mart', '2024-01-08 12:00:00', 4
-5, 1, 'Pacific Home', '2024-01-09 13:00:00', 5
-6, 91, 'Mumbai Bazaar', '2024-01-10 14:00:00', 6
-7, 61, 'Sydney Supplies', '2024-01-11 15:00:00', 7
-8, 82, 'Seoul Select', '2024-01-12 16:00:00', 8
-9, 49, 'Berlin Central', '2024-01-13 17:00:00', 9
-10, 33, 'Paris Boutique', '2024-01-14 18:00:00', 10
+Enum tipo_evento_analitica {
+  vista_negocio
+  vista_publicacion
+  clic_whatsapp
+  clic_telefono
+  clic_red_social
+  escaneo_qr
+  vista_reel
 }
 
-Records ecommerce.products (id, name, merchant_id, price, status, created_at) {
-1, 'Wireless Mouse', 1, 25, 'in_stock', '2024-02-01 09:00:00'
-2, 'Mechanical Keyboard', 1, 80, 'running_low', '2024-02-01 09:30:00'
-3, 'Tea Set', 2, 45, 'in_stock', '2024-02-02 10:00:00'
-4, 'Rice Cooker', 3, 60, 'in_stock', '2024-02-02 10:30:00'
-5, 'Sushi Knife', 4, 120, 'running_low', '2024-02-03 11:00:00'
-6, 'Desk Lamp', 5, 35, 'out_of_stock', '2024-02-03 11:30:00'
-7, 'Spice Box', 6, 20, 'in_stock', '2024-02-04 12:00:00'
-8, 'Notebook Set', 7, 15, 'in_stock', '2024-02-04 12:30:00'
-9, 'Bluetooth Speaker', 8, 55, 'running_low', '2024-02-05 13:00:00'
-10, 'Coffee Grinder', 9, 70, 'in_stock', '2024-02-05 13:30:00'
+Enum estado_moderacion {
+  pendiente
+  en_revision
+  resuelto_aceptado
+  resuelto_desestimado
 }
 
-Records ecommerce.product_tags (id, name) {
-1, 'electronics'
-2, 'home'
-3, 'kitchen'
-4, 'office'
-5, 'audio'
-6, 'premium'
-7, 'portable'
-8, 'gift'
-9, 'daily-use'
-10, 'handmade'
+// =============================================================================
+// 1. IDENTIDAD Y ACCESO (Usuarios y Seguridad — Better Auth)
+// =============================================================================
+
+Table user [owner: 'identity', pii: 'true'] {
+  id text [pk, note: 'Identificador único alfanumérico generado por Better Auth']
+  name varchar(80) [not null]
+  email varchar(255) [not null, unique]
+  email_verified boolean [not null, default: false]
+  image text
+  role varchar(30) [default: 'vecino', note: 'vecino | comerciante | moderador | admin']
+  banned boolean [default: false]
+  ban_reason text
+  ban_expires timestamptz
+  telefono varchar(30)
+  puede_probar_premium boolean [not null, default: true, note: 'True si aún no consumió su prueba gratuita']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  Indexes {
+    role
+  }
 }
 
-Records ecommerce.orders (id, user_id, status, created_at) {
-1, 1, 'completed', '2024-02-10 09:15:00'
-2, 2, 'pending', '2024-02-10 10:20:00'
-3, 3, 'completed', '2024-02-11 11:30:00'
-4, 4, 'cancelled', '2024-02-11 12:00:00'
-5, 5, 'completed', '2024-02-12 13:10:00'
-6, 6, 'pending', '2024-02-12 14:25:00'
-7, 7, 'completed', '2024-02-13 15:40:00'
-8, 8, 'pending', '2024-02-13 16:50:00'
-9, 9, 'completed', '2024-02-14 17:05:00'
-10, 10, 'cancelled', '2024-02-14 18:20:00'
+Table session [owner: 'identity', pii: 'true'] {
+  id text [pk]
+  expires_at timestamptz [not null]
+  token text [not null, unique]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  ip_address varchar(64)
+  user_agent text
+  user_id text [not null, ref: > user.id]
+  impersonated_by text
+
+  Indexes {
+    user_id
+  }
 }
 
-Records ecommerce.order_items (order_id, product_id, quantity) {
-1, 1, 2
-1, 2, 1
-2, 3, 1
-3, 4, 1
-3, 7, 3
-4, 5, 1
-5, 6, 2
-6, 8, 4
-7, 9, 1
-8, 10, 2
+Table account [owner: 'identity', pii: 'true'] {
+  id text [pk]
+  account_id text [not null]
+  provider_id text [not null]
+  user_id text [not null, ref: > user.id]
+  access_token text
+  refresh_token text
+  id_token text
+  access_token_expires_at timestamptz
+  refresh_token_expires_at timestamptz
+  scope text
+  password text
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  Indexes {
+    user_id
+  }
 }
 
-Records ecommerce.merchant_periods (id, merchant_id, country_code, start_date, end_date) {
-1, 1, 1, '2024-01-01 00:00:00', '2024-03-31 23:59:59'
-2, 2, 44, '2024-01-01 00:00:00', '2024-06-30 23:59:59'
-3, 3, 84, '2024-02-01 00:00:00', '2024-04-30 23:59:59'
-4, 4, 81, '2024-01-15 00:00:00', '2024-05-15 23:59:59'
-5, 5, 1, '2024-03-01 00:00:00', '2024-08-31 23:59:59'
-6, 6, 91, '2024-02-10 00:00:00', '2024-07-31 23:59:59'
-7, 7, 61, '2024-01-20 00:00:00', '2024-04-20 23:59:59'
-8, 8, 82, '2024-02-05 00:00:00', '2024-06-05 23:59:59'
-9, 9, 49, '2024-01-25 00:00:00', '2024-05-25 23:59:59'
-10, 10, 33, '2024-02-15 00:00:00', '2024-07-15 23:59:59'
+Table verification [owner: 'identity', pii: 'true'] {
+  id text [pk]
+  identifier text [not null]
+  value text [not null]
+  expires_at timestamptz [not null]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+
+  Indexes {
+    identifier
+  }
+}
+
+Table auditoria_accesos [owner: 'security', pii: 'true'] {
+  ~uuid_pk
+  usuario_id text [not null, ref: > user.id]
+  ip_address inet
+  user_agent text
+  dispositivo_hash varchar(128)
+  creado_en timestamptz [not null, default: `now()`]
+
+  Indexes {
+    (usuario_id, creado_en)
+  }
+}
+
+// =============================================================================
+// 2. PLANES, MEMBRESÍAS Y MONETIZACIÓN
+// =============================================================================
+
+Table planes_catalogo [owner: 'billing'] {
+  codigo codigo_plan [pk]
+  nombre varchar(50) [not null]
+  precio_mensual_ars numeric(10,2) [not null, check: `precio_mensual_ars >= 0`]
+  max_publicaciones int [not null, note: 'Ej: Gratis=2, Plata=10, Oro=999']
+  max_fotos_por_publicacion int [not null, default: 5]
+  cupos_destacados int [not null, default: 0, note: 'Gratis=0, Plata=1, Oro=3']
+  max_sucursales int [not null, default: 1, note: 'Gratis=1 (solo casa central), Plata=3, Oro=10']
+  max_reels_activos int [not null, default: 0, note: 'Gratis=0, Plata=1, Oro=3']
+  prioridad_base int [not null, default: 0, note: 'Gratis=0, Plata=10, Oro=20']
+  permite_estadisticas boolean [not null, default: false]
+  permite_pin_destacado boolean [not null, default: false]
+  permite_banner boolean [not null, default: false]
+  permite_asistente_ia boolean [not null, default: false]
+  caracteristicas_base jsonb [not null, note: 'Plantilla JSONB que se materializa en negocios.entitlements']
+  activo boolean [not null, default: true]
+  ~timestamps
+}
+
+Table membresias [owner: 'billing'] {
+  ~uuid_pk
+  negocio_id uuid [not null, ref: > negocios.id]
+  plan_codigo codigo_plan [not null, ref: > planes_catalogo.codigo]
+  estado estado_membresia [not null, default: 'activa']
+  fecha_inicio timestamptz [not null, default: `now()`]
+  fecha_fin timestamptz [not null]
+  es_prueba boolean [not null, default: false]
+  codigo_promocional_id uuid [ref: > codigos_promocionales.id]
+  auto_renovar boolean [not null, default: false]
+  ~timestamps
+
+  Checks {
+    `fecha_inicio < fecha_fin`
+  }
+
+  Indexes {
+    (negocio_id, estado)
+    fecha_fin
+  }
+}
+
+Table pagos_membresia [owner: 'billing', pii: 'true'] {
+  ~uuid_pk
+  membresia_id uuid [not null, ref: > membresias.id]
+  negocio_id uuid [not null, ref: > negocios.id]
+  usuario_id text [not null, ref: > user.id]
+  monto_ars numeric(10,2) [not null, check: `monto_ars >= 0`]
+  pasarela varchar(30) [not null, default: 'mercadopago', note: 'mercadopago | transferencia_manual | promo']
+  referencia_externa varchar(120) [unique, note: 'ID de pago o preferencia en MercadoPago']
+  estado estado_pago [not null, default: 'pendiente']
+  comprobante_url text [note: 'Para pagos manuales por transferencia en Alberdi']
+  metadata_pasarela jsonb
+  pagado_en timestamptz
+  ~timestamps
+
+  Indexes {
+    (negocio_id, estado)
+    referencia_externa
+  }
+}
+
+Table codigos_promocionales [owner: 'billing'] {
+  ~uuid_pk
+  codigo varchar(40) [not null, unique]
+  descripcion text
+  plan_otorgado codigo_plan [not null, ref: > planes_catalogo.codigo]
+  dias_vigencia int [not null, default: 30, check: `dias_vigencia > 0`]
+  usos_maximos int [not null, default: 1]
+  usos_actuales int [not null, default: 0]
+  valido_hasta timestamptz
+  activo boolean [not null, default: true]
+  ~timestamps
+}
+
+// =============================================================================
+// 3. TAXONOMÍA Y CATÁLOGOS BASE
+// =============================================================================
+
+Table rubros_grupos [owner: 'catalog'] {
+  ~uuid_pk
+  slug varchar(80) [not null, unique]
+  nombre varchar(80) [not null, note: 'Ej: Gastronomía, Hogar y Construcción, Profesionales']
+  icono varchar(60) [not null]
+  color_hex varchar(7) [not null, default: '#2563EB']
+  destacado_portada boolean [not null, default: false, note: 'Resuelve la discrepancia de portada vs índice total']
+  orden int [not null, default: 0]
+  activo boolean [not null, default: true]
+}
+
+Table categorias [owner: 'catalog'] {
+  ~uuid_pk
+  grupo_id uuid [not null, ref: > rubros_grupos.id]
+  parent_id uuid [ref: > categorias.id, note: 'Permite subcategorías limpias en cualquier rubro']
+  slug varchar(100) [not null, unique]
+  nombre varchar(100) [not null]
+  tipo_permitido tipo_publicacion [note: 'Null si admite ambos (servicio y producto)']
+  icono varchar(60)
+  color_hex varchar(7)
+  orden int [not null, default: 0]
+  activa boolean [not null, default: true]
+  ~timestamps
+
+  Indexes {
+    (grupo_id, activa)
+    parent_id
+  }
+}
+
+Table metodos_pago_catalogo [owner: 'catalog'] {
+  ~uuid_pk
+  codigo varchar(40) [not null, unique, note: 'efectivo, transferencia, mercadopago, tarjeta_debito, tarjeta_credito, dni_billetera']
+  nombre varchar(60) [not null]
+  icono varchar(60)
+  activo boolean [not null, default: true]
+}
+
+// =============================================================================
+// 4. NÚCLEO COMERCIAL: NEGOCIOS / OFICIOS Y PUBLICACIONES
+// =============================================================================
+
+Table negocios [owner: 'core'] {
+  ~uuid_pk
+  propietario_id text [not null, ref: > user.id, note: '1 usuario puede tener múltiples perfiles (ej: un comercio y un oficio)']
+  tipo_perfil tipo_perfil_comercial [not null, default: 'comercio', note: 'Define si es Comercio, Oficio, Profesional o Emprendimiento']
+  rubro_principal_id uuid [not null, ref: > rubros_grupos.id]
+  slug varchar(120) [not null, unique, note: 'URL amigable para SEO: /negocio/ferreteria-san-martin']
+  nombre_comercial varchar(120) [not null, note: 'Nombre de fantasía del local o Nombre y Apellido del oficio/profesional']
+  eslogan varchar(160) [note: 'Ej: "Plomería y gas matriculado en el día" o "Todo para la construcción"']
+  matricula_profesional varchar(60) [note: 'Opcional: clave para gasistas, electricistas o profesionales matriculados']
+  descripcion text
+  logo_url text
+  banner_url text
+  qr_code_token varchar(40) [not null, unique, note: 'Token corto para ruta imprimible /qr/:token']
+
+  // Estado y Verificación
+  estado estado_negocio [not null, default: 'activo']
+  verificacion estado_verificacion [not null, default: 'no_solicitada']
+  verificado_en timestamptz
+  badge_texto varchar(40) [note: 'Ej: Comercio Verificado, Oficio Verificado, Pionero en Alberdi']
+
+  // Plan y Entitlements Materializados (Patrón de lectura ultrarrápida)
+  plan_actual codigo_plan [not null, default: 'gratis', ref: > planes_catalogo.codigo]
+  plan_vence_en timestamptz
+  prioridad_plan int [not null, default: 0, note: 'Copiado del plan (0, 10, 20) para ORDER BY rápido']
+  cupos_destacados_max int [not null, default: 0, note: 'Gratis=0, Plata=1, Oro=3']
+  max_sucursales int [not null, default: 1, note: 'Gratis=1 (sin sucursales extra), Plata=3, Oro=10']
+  entitlements jsonb [not null, default: '{}', note: 'Capacidades resueltas del negocio según su plan activo']
+
+  // Canales de Contacto Directo (1 sola vez por negocio)
+  whatsapp_principal varchar(30) [not null, note: 'Formato internacional para wa.me']
+  whatsapp_mensaje_default varchar(250) [default: 'Hola, te vi en Mi Alberdi y quería hacerte una consulta.']
+  telefono_linea varchar(30)
+  email_contacto varchar(255)
+  instagram_handle varchar(80)
+  facebook_url text
+  tiktok_handle varchar(80)
+  sitio_web_url text
+
+  // Operativa Comercial y de Oficios
+  modalidad_principal modalidad_atencion [not null, default: 'horarios_fijos']
+  atiende_a_domicilio boolean [not null, default: false, note: 'Clave para oficios (plomeros, técnicos) y profesionales']
+  hace_envios boolean [not null, default: false]
+  alcance_envios alcance_envio [not null, default: 'sin_envio']
+  acepta_cuotas boolean [not null, default: false]
+  politica_cambios text
+
+  // Métricas Desnormalizadas y Ranking Justo
+  rating_promedio numeric(3,2) [not null, default: 0.00, check: `rating_promedio >= 0 AND rating_promedio <= 5`]
+  total_opiniones int [not null, default: 0]
+  porcentaje_completitud int [not null, default: 50, check: `porcentaje_completitud >= 0 AND porcentaje_completitud <= 100`]
+  ultima_actividad_en timestamptz [not null, default: `now()`, note: 'Se actualiza al subir reels o editar catálogo para desempate justo']
+  search_vector tsvector [note: 'Índice Full-Text Search en Postgres (nombre + eslogan + descripción)']
+  ~timestamps
+
+  Indexes {
+    propietario_id
+    (tipo_perfil, estado)
+    (estado, prioridad_plan, rating_promedio) [name: 'idx_negocios_ranking']
+    (rubro_principal_id, estado)
+  }
+}
+
+Table ubicaciones_negocio [owner: 'core', note: 'Soporta Casa Central (Gratis=1) y Sucursales adicionales (Plata=3, Oro=10)'] {
+  ~uuid_pk
+  negocio_id uuid [not null, ref: > negocios.id]
+  nombre_sucursal varchar(80) [not null, default: 'Casa Central', note: 'Ej: Casa Central, Sucursal Centro, Sucursal Barrio Norte']
+  es_principal boolean [not null, default: true]
+  direccion_escrita varchar(200) [not null]
+  barrio varchar(80) [note: 'Barrio o zona dentro de Juan Bautista Alberdi']
+  referencia_visual varchar(200) [note: 'Ej: Frente a la plaza principal, portón verde']
+  foto_fachada_url text
+  whatsapp_sucursal varchar(30) [note: 'Opcional: si la sucursal tiene su propio WhatsApp de atención/pedidos; si es null usa whatsapp_principal']
+  telefono_sucursal varchar(30)
+  latitud numeric(9,6)
+  longitud numeric(9,6)
+  pin_color_hex varchar(7) [default: '#EF4444']
+  pin_destacado boolean [not null, default: false]
+  mostrar_direccion_exacta boolean [not null, default: true, note: 'False para oficios/profesionales que atienden a domicilio y solo muestran barrio/zona']
+  activa_por_plan boolean [not null, default: true, note: 'Si baja a Gratis, las sucursales secundarias (es_principal=false) pasan a false sin borrarse']
+  ~timestamps
+
+  Indexes {
+    (negocio_id, es_principal)
+    (negocio_id, activa_por_plan)
+    (latitud, longitud)
+  }
+}
+
+Table horarios_negocio [owner: 'core'] {
+  ~uuid_pk
+  negocio_id uuid [not null, ref: > negocios.id]
+  ubicacion_id uuid [ref: > ubicaciones_negocio.id, note: 'Null si el horario aplica a todo el negocio; o específico de una sucursal']
+  dia_semana smallint [not null, check: `dia_semana >= 0 AND dia_semana <= 6`, note: '0=Domingo .. 6=Sábado']
+  cerrado boolean [not null, default: false]
+  horario_corrido boolean [not null, default: false]
+  apertura_manana time
+  cierre_manana time
+  apertura_tarde time [note: 'Clave en el interior por el corte de la siesta']
+  cierre_tarde time
+  nota_especial varchar(120)
+
+  Indexes {
+    (negocio_id, ubicacion_id, dia_semana)
+  }
+}
+
+Table negocios_metodos_pago [owner: 'core'] {
+  negocio_id uuid [not null, ref: > negocios.id]
+  metodo_pago_id uuid [not null, ref: > metodos_pago_catalogo.id]
+  detalle varchar(100) [note: 'Ej: 10% descuento en efectivo / 3 cuotas sin interés']
+
+  Indexes {
+    (negocio_id, metodo_pago_id) [pk]
+  }
+}
+
+Table publicaciones [owner: 'core'] {
+  ~uuid_pk
+  negocio_id uuid [not null, ref: > negocios.id]
+  categoria_id uuid [not null, ref: > categorias.id]
+  slug varchar(140) [not null, unique, note: 'URL SEO: /publicacion/instalacion-aires-acondicionados-xyz']
+  tipo tipo_publicacion [not null]
+  titulo varchar(140) [not null]
+  descripcion text [not null]
+  precio_referencia_ars numeric(12,2) [check: `precio_referencia_ars >= 0`, note: 'Null si es "A convenir" o "Consultar"']
+  etiqueta_precio varchar(40) [note: 'Ej: Desde $15.000, Por hora, Presupuesto sin cargo']
+  modalidad modalidad_atencion [not null, default: 'horarios_fijos']
+  whatsapp_especifico varchar(30) [note: 'Si es null, hereda el whatsapp_principal del negocio']
+  mensaje_whatsapp_custom varchar(250)
+
+  // Sistema de Cupos de Destacados (Opción B Híbrida)
+  es_destacada boolean [not null, default: false, note: 'Controlado por trigger según negocios.cupos_destacados_max']
+  destacada_desde timestamptz
+  orden_en_negocio int [not null, default: 0, note: 'Orden dentro de la vidriera del propio negocio']
+
+  // Estado y Moderación
+  estado estado_publicacion [not null, default: 'activa']
+  reportes_acumulados int [not null, default: 0]
+  search_vector tsvector [note: 'Full-Text Search (titulo + descripcion)']
+  ~timestamps
+
+  Indexes {
+    (negocio_id, estado)
+    (categoria_id, estado, es_destacada) [name: 'idx_publicaciones_busqueda']
+  }
+}
+
+Table imagenes_publicacion [owner: 'core'] {
+  ~uuid_pk
+  publicacion_id uuid [not null, ref: > publicaciones.id]
+  url text [not null]
+  alt_text varchar(160)
+  es_portada boolean [not null, default: false]
+  orden smallint [not null, default: 0]
+  creado_en timestamptz [not null, default: `now()`]
+
+  Indexes {
+    (publicacion_id, orden)
+  }
+}
+
+// =============================================================================
+// 5. VISIBILIDAD, CONFIANZA Y RETENCIÓN (Reels, Reseñas, Analítica)
+// =============================================================================
+
+Table reels_historias [owner: 'engagement'] {
+  ~uuid_pk
+  negocio_id uuid [not null, ref: > negocios.id]
+  publicacion_id uuid [ref: > publicaciones.id, note: 'Opcional: permite vincular la historia a un producto/servicio puntual']
+  media_url text [not null]
+  miniatura_url text
+  caption varchar(280)
+  boton_accion_texto varchar(40) [default: 'Consultar por WhatsApp']
+  duracion_seg smallint [not null, default: 30, check: `duracion_seg > 0 AND duracion_seg <= 60`]
+  expira_en timestamptz [not null, note: 'Por defecto creado_en + 24 horas']
+  activo boolean [not null, default: true]
+  vistas_contador int [not null, default: 0]
+  clics_whatsapp_contador int [not null, default: 0]
+  creado_en timestamptz [not null, default: `now()`]
+
+  Indexes {
+    (activo, expira_en) [name: 'idx_reels_vigentes']
+    negocio_id
+  }
+}
+
+Table opiniones [owner: 'engagement'] {
+  ~uuid_pk
+  negocio_id uuid [not null, ref: > negocios.id]
+  publicacion_id uuid [ref: > publicaciones.id, note: 'Opcional: si opinó sobre un servicio puntual']
+  usuario_id text [ref: > user.id, note: 'Null si es reseña rápida por dispositivo verificado']
+  dispositivo_id varchar(128) [note: 'Huella anónima para evitar spam sin obligar a registro']
+  nombre_autor_visible varchar(80) [not null]
+  puntuacion smallint [not null, check: `puntuacion >= 1 AND puntuacion <= 5`]
+  comentario text
+  foto_evidencia_url text
+  respuesta_comerciante text
+  respondido_en timestamptz
+  visible boolean [not null, default: true]
+  ~timestamps
+
+  Indexes {
+    (negocio_id, visible, creado_en)
+    (negocio_id, dispositivo_id)
+  }
+}
+
+Table eventos_analitica [owner: 'analytics', note: 'El motor para demostrarle al comerciante que los $1.500/$2.500 valen la pena'] {
+  ~uuid_pk
+  negocio_id uuid [not null, ref: > negocios.id]
+  publicacion_id uuid [ref: > publicaciones.id]
+  ubicacion_id uuid [ref: > ubicaciones_negocio.id, note: 'Opcional: para medir a qué sucursal le hicieron clic en el mapa o WhatsApp']
+  reel_id uuid [ref: > reels_historias.id]
+  tipo_evento tipo_evento_analitica [not null]
+  origen varchar(40) [note: 'portada, buscador, mapa, qr_vidriera, reel, compartido']
+  dispositivo_hash varchar(128)
+  creado_en timestamptz [not null, default: `now()`]
+
+  Indexes {
+    (negocio_id, tipo_evento, creado_en) [name: 'idx_metricas_comerciante']
+    (publicacion_id, tipo_evento)
+  }
+}
+
+// =============================================================================
+// 6. MODERACIÓN, VERIFICACIÓN Y SISTEMA
+// =============================================================================
+
+Table solicitudes_verificacion [owner: 'moderation', pii: 'true'] {
+  ~uuid_pk
+  negocio_id uuid [not null, ref: > negocios.id]
+  solicitante_id text [not null, ref: > user.id]
+  documento_frente_url text [note: 'Bucket privado, nunca público']
+  comprobante_comercio_url text [note: 'Foto de habilitación, matrícula profesional, boleta de servicio o local']
+  notas_solicitante text
+  estado estado_verificacion [not null, default: 'pendiente']
+  revisado_por text [ref: > user.id]
+  motivo_rechazo text
+  resuelto_en timestamptz
+  ~timestamps
+
+  Indexes {
+    (estado, creado_en)
+    negocio_id
+  }
+}
+
+Table reportes_moderacion [owner: 'moderation'] {
+  ~uuid_pk
+  negocio_id uuid [ref: > negocios.id]
+  publicacion_id uuid [ref: > publicaciones.id]
+  opinion_id uuid [ref: > opiniones.id]
+  reportante_id text [ref: > user.id]
+  dispositivo_hash varchar(128)
+  motivo varchar(80) [not null, note: 'estafa, contenido_inapropiado, datos_falsos, duplicado']
+  detalle text
+  estado estado_moderacion [not null, default: 'pendiente']
+  revisado_por text [ref: > user.id]
+  resolucion_nota text
+  ~timestamps
+
+  Indexes {
+    (estado, creado_en)
+  }
+}
+
+Table feedback_plataforma [owner: 'system', pii: 'true', note: 'RLS estricto: SOLO lectura para rol admin (corrige vulnerabilidad de GoyaNova)'] {
+  ~uuid_pk
+  usuario_id text [ref: > user.id]
+  nombre_completo varchar(120)
+  email varchar(255)
+  mensaje text [not null]
+  ip_address inet
+  user_agent text
+  notas_admin text
+  leido boolean [not null, default: false]
+  creado_en timestamptz [not null, default: `now()`]
+}
+
+Table configuracion_sistema [owner: 'system'] {
+  id smallint [pk, default: 1, check: `id = 1`]
+  modo_mantenimiento boolean [not null, default: false]
+  mensaje_mantenimiento text
+  usuarios_excluidos_mantenimiento text[]
+  semilla_rotacion_ranking int [not null, default: 1, note: 'Se rota cada hora/día por cron para desempatar negocios del mismo plan']
+  version_minima_pwa varchar(20)
+  actualizado_en timestamptz [not null, default: `now()`]
+}
+
+// =============================================================================
+// RECORDS DE EJEMPLO (Para visualizar datos reales en dbdiagram.io)
+// =============================================================================
+
+Records planes_catalogo (codigo, nombre, precio_mensual_ars, max_publicaciones, max_fotos_por_publicacion, cupos_destacados, max_sucursales, max_reels_activos, prioridad_base, permite_estadisticas, permite_pin_destacado, permite_banner, permite_asistente_ia, caracteristicas_base, activo) {
+  'gratis', 'Plan Vecino Gratis', 0.00, 2, 3, 0, 1, 0, 0, false, false, false, false, '{"whatsapp_directo":true,"mapa_buscador":true,"qr_vidriera":true,"sucursales_extra":false}', true
+  'plata', 'Plan Comercio Plata', 1500.00, 10, 6, 1, 3, 1, 10, true, true, false, false, '{"whatsapp_directo":true,"mapa_buscador":true,"qr_vidriera":true,"badge_verificado":true,"pin_destacado":true,"estadisticas":true,"reel_24h":true,"sucursales_extra":true}', true
+  'oro', 'Plan Impulso Oro', 2500.00, 999, 10, 3, 10, 3, 20, true, true, true, true, '{"whatsapp_directo":true,"mapa_buscador":true,"qr_vidriera":true,"badge_verificado":true,"pin_destacado":true,"estadisticas":true,"reel_24h":true,"banner_portada":true,"whatsapp_animado":true,"asistente_ia":true,"sucursales_extra":true}', true
 }
