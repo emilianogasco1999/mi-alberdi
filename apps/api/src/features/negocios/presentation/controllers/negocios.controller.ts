@@ -2,13 +2,14 @@ import type { Request, Response } from 'express';
 import { response } from '@core/presentation/utils/response.js';
 import { UnauthorizedError } from '@core/domain/errors/appErrors.js';
 import { negociosMessages } from '../../domain/constants/negocios.messages.js';
+import type { INegociosRepository } from '../../domain/repositories/INegociosRepository.js';
 import { NegociosRepositoryImpl } from '../../infrastructure/repositories/negocios.repository.impl.js';
 import { AltaNegocioWizardUseCase } from '../../application/use-cases/alta-negocio-wizard.use-case.js';
-import { AltaNegocioSimpleUseCase } from '../../application/use-cases/alta-negocio-simple.use-case.js';
-import { GetMisNegociosUseCase } from '../../application/use-cases/get-mis-negocios.use-case.js';
 import { GetNegocioDetalleUseCase } from '../../application/use-cases/get-negocio-detalle.use-case.js';
 import { GetNegocioPublicoUseCase } from '../../application/use-cases/get-negocio-publico.use-case.js';
-import { UpdateNegocioUseCase } from '../../application/use-cases/update-negocio.use-case.js';
+import { CrearNegocioUseCase } from '../../application/use-cases/crear-negocio.use-case.js';
+import { ListarMisNegociosUseCase } from '../../application/use-cases/listar-mis-negocios.use-case.js';
+import { ActualizarNegocioUseCase } from '../../application/use-cases/actualizar-negocio.use-case.js';
 import { CreateSucursalUseCase } from '../../application/use-cases/create-sucursal.use-case.js';
 import { UpdateSucursalUseCase } from '../../application/use-cases/update-sucursal.use-case.js';
 import { DeleteSucursalUseCase } from '../../application/use-cases/delete-sucursal.use-case.js';
@@ -16,18 +17,33 @@ import { ConfigurarHorariosUseCase } from '../../application/use-cases/configura
 import { VincularMetodosPagoUseCase } from '../../application/use-cases/vincular-metodos-pago.use-case.js';
 
 export class NegociosController {
-  private readonly repository = new NegociosRepositoryImpl();
-  private readonly altaWizardUseCase = new AltaNegocioWizardUseCase(this.repository);
-  private readonly altaSimpleUseCase = new AltaNegocioSimpleUseCase(this.repository);
-  private readonly getMisNegociosUseCase = new GetMisNegociosUseCase(this.repository);
-  private readonly getDetalleUseCase = new GetNegocioDetalleUseCase(this.repository);
-  private readonly getPublicoUseCase = new GetNegocioPublicoUseCase(this.repository);
-  private readonly updateUseCase = new UpdateNegocioUseCase(this.repository);
-  private readonly createSucursalUseCase = new CreateSucursalUseCase(this.repository);
-  private readonly updateSucursalUseCase = new UpdateSucursalUseCase(this.repository);
-  private readonly deleteSucursalUseCase = new DeleteSucursalUseCase(this.repository);
-  private readonly configurarHorariosUseCase = new ConfigurarHorariosUseCase(this.repository);
-  private readonly vincularMetodosPagoUseCase = new VincularMetodosPagoUseCase(this.repository);
+  private readonly repository: INegociosRepository;
+  private readonly altaWizardUseCase: AltaNegocioWizardUseCase;
+  private readonly getDetalleUseCase: GetNegocioDetalleUseCase;
+  private readonly getPublicoUseCase: GetNegocioPublicoUseCase;
+  private readonly crearNegocioUseCase: CrearNegocioUseCase;
+  private readonly listarMisNegociosUseCase: ListarMisNegociosUseCase;
+  private readonly actualizarNegocioUseCase: ActualizarNegocioUseCase;
+  private readonly createSucursalUseCase: CreateSucursalUseCase;
+  private readonly updateSucursalUseCase: UpdateSucursalUseCase;
+  private readonly deleteSucursalUseCase: DeleteSucursalUseCase;
+  private readonly configurarHorariosUseCase: ConfigurarHorariosUseCase;
+  private readonly vincularMetodosPagoUseCase: VincularMetodosPagoUseCase;
+
+  constructor(repository?: INegociosRepository) {
+    this.repository = repository ?? new NegociosRepositoryImpl();
+    this.altaWizardUseCase = new AltaNegocioWizardUseCase(this.repository);
+    this.getDetalleUseCase = new GetNegocioDetalleUseCase(this.repository);
+    this.getPublicoUseCase = new GetNegocioPublicoUseCase(this.repository);
+    this.crearNegocioUseCase = new CrearNegocioUseCase(this.repository);
+    this.listarMisNegociosUseCase = new ListarMisNegociosUseCase(this.repository);
+    this.actualizarNegocioUseCase = new ActualizarNegocioUseCase(this.repository);
+    this.createSucursalUseCase = new CreateSucursalUseCase(this.repository);
+    this.updateSucursalUseCase = new UpdateSucursalUseCase(this.repository);
+    this.deleteSucursalUseCase = new DeleteSucursalUseCase(this.repository);
+    this.configurarHorariosUseCase = new ConfigurarHorariosUseCase(this.repository);
+    this.vincularMetodosPagoUseCase = new VincularMetodosPagoUseCase(this.repository);
+  }
 
   altaWizard = async (req: Request, res: Response): Promise<void> => {
     if (!req.user) throw UnauthorizedError();
@@ -42,7 +58,7 @@ export class NegociosController {
 
   altaSimple = async (req: Request, res: Response): Promise<void> => {
     if (!req.user) throw UnauthorizedError();
-    const result = await this.altaSimpleUseCase.execute(req.user.id, req.body);
+    const result = await this.crearNegocioUseCase.execute(req.user.id, req.body);
     response(
       res,
       negociosMessages.altaSuccess.statusCode,
@@ -51,9 +67,9 @@ export class NegociosController {
     );
   };
 
-  getMisNegocios = async (req: Request, res: Response): Promise<void> => {
+  getMisComercios = async (req: Request, res: Response): Promise<void> => {
     if (!req.user) throw UnauthorizedError();
-    const result = await this.getMisNegociosUseCase.execute(req.user.id);
+    const result = await this.listarMisNegociosUseCase.execute(req.user.id);
     response(
       res,
       negociosMessages.getMisNegociosSuccess.statusCode,
@@ -89,12 +105,11 @@ export class NegociosController {
 
   update = async (req: Request, res: Response): Promise<void> => {
     if (!req.user) throw UnauthorizedError();
-    const param = req.params.negocioId;
+    const param = req.params.negocioId ?? req.params.id;
     const negocioId = Array.isArray(param) ? param[0] : param;
-    const result = await this.updateUseCase.execute(
+    const result = await this.actualizarNegocioUseCase.execute(
       negocioId,
       req.user.id,
-      req.user.rol,
       req.body,
     );
     response(
@@ -199,4 +214,3 @@ export class NegociosController {
     );
   };
 }
-

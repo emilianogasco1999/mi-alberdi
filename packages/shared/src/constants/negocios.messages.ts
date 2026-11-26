@@ -1,0 +1,20 @@
+export const NEGOCIOS_MESSAGES = {
+  VALIDACION: {
+    NOMBRE_REQUERIDO: 'El nombre comercial o del oficio es obligatorio',
+    NOMBRE_MIN: 'El nombre debe tener al menos 3 caracteres',
+    NOMBRE_MAX: 'El nombre no puede superar los 100 caracteres',
+    TIPO_REQUERIDO: 'El tipo de negocio es obligatorio',
+    TIPO_INVALIDO: 'El tipo de negocio debe ser COMERCIO u OFICIO (o un tipo de perfil válido)',
+    RUBRO_INVALIDO: 'ID de rubro principal inválido',
+    TELEFONO_REQUERIDO: 'El número de teléfono o WhatsApp es obligatorio',
+    TELEFONO_INVALIDO: 'Ingresá un número de teléfono o WhatsApp válido (ej: +54 9 3865 123456)',
+    DIRECCION_REQUERIDA: 'La dirección es obligatoria',
+    DIRECCION_MIN: 'La dirección debe tener al menos 5 caracteres',
+    DIRECCION_MAX: 'La dirección no puede superar los 200 caracteres',
+    DESCRIPCION_MAX: 'La descripción no puede superar los 2000 caracteres',
+    INSTAGRAM_INVALIDO: 'Usuario o enlace de Instagram inválido',
+    LOGO_URL_INVALIDA: 'URL o ruta de logo inválida',
+    BANNER_URL_INVALIDA: 'URL o ruta de banner inválida',
+    ALCANCE_ENVIO_REQUERIDO: 'Si realizás envíos, debés seleccionar el alcance (ej: Solo Alberdi)',
+  },
+} as const;

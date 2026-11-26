@@ -1,7 +1,10 @@
 import { prisma } from '@core/infrastructure/database/prisma.service.js';
+import { ClientError } from '@core/domain/errors/appErrors.js';
 import type {
+  ActualizarNegocioInput,
   AltaNegocioWizardInput,
   ConfigurarHorariosSemanaInput,
+  CrearNegocioInput,
   CreateNegocioInput,
   CreateSucursalInput,
   HorarioNegocioDTO,
@@ -134,18 +137,34 @@ export class NegociosRepositoryImpl implements INegociosRepository {
 
   async createSimple(
     propietarioId: string,
-    input: CreateNegocioInput,
+    input: CreateNegocioInput | CrearNegocioInput,
     slug: string,
     qrCodeToken: string,
   ): Promise<NegocioDTO> {
     return prisma.$transaction(async (tx) => {
-      const n = input;
+      const n = input as CreateNegocioInput & Partial<CrearNegocioInput>;
+
+      let rubroPrincipalId = n.rubroPrincipalId;
+      if (!rubroPrincipalId) {
+        const defaultRubro = await tx.rubroGrupo.findFirst({
+          where: { activo: true },
+          orderBy: { orden: 'asc' },
+          select: { id: true },
+        });
+        if (!defaultRubro) {
+          throw ClientError('No existen rubros activos configurados en el catálogo', 400);
+        }
+        rubroPrincipalId = defaultRubro.id;
+      }
+
+      const direccionPrincipal =
+        n.direccionEscrita ?? n.direccion ?? 'Juan Bautista Alberdi, Tucumán';
 
       const negocio = await tx.negocio.create({
         data: {
           propietarioId,
           tipoPerfil: n.tipoPerfil,
-          rubroPrincipalId: n.rubroPrincipalId,
+          rubroPrincipalId,
           slug,
           nombreComercial: n.nombreComercial,
           eslogan: n.eslogan ?? null,
@@ -167,11 +186,11 @@ export class NegociosRepositoryImpl implements INegociosRepository {
           facebookUrl: n.facebookUrl ?? null,
           tiktokHandle: n.tiktokHandle ?? null,
           sitioWebUrl: n.sitioWebUrl ?? null,
-          modalidadPrincipal: n.modalidadPrincipal,
-          atiendeADomicilio: n.atiendeADomicilio,
-          haceEnvios: n.haceEnvios,
-          alcanceEnvios: n.alcanceEnvios,
-          aceptaCuotas: n.aceptaCuotas,
+          modalidadPrincipal: n.modalidadPrincipal ?? 'horarios_fijos',
+          atiendeADomicilio: n.atiendeADomicilio ?? false,
+          haceEnvios: n.haceEnvios ?? false,
+          alcanceEnvios: n.alcanceEnvios ?? 'sin_envio',
+          aceptaCuotas: n.aceptaCuotas ?? false,
           politicaCambios: n.politicaCambios ?? null,
         },
       });
@@ -182,8 +201,8 @@ export class NegociosRepositoryImpl implements INegociosRepository {
           negocioId: negocio.id,
           nombreSucursal: 'Casa Central',
           esPrincipal: true,
-          direccionEscrita: 'Juan Bautista Alberdi, Tucumán',
-          mostrarDireccionExacta: false,
+          direccionEscrita: direccionPrincipal,
+          mostrarDireccionExacta: n.tipoPerfil === 'comercio',
           activaPorPlan: true,
         },
       });
@@ -446,6 +465,8 @@ export class NegociosRepositoryImpl implements INegociosRepository {
         tipoPerfil: n.tipoPerfil,
         nombreComercial: n.nombreComercial,
         eslogan: n.eslogan,
+        descripcion: n.descripcion,
+        instagramHandle: n.instagramHandle,
         logoUrl: n.logoUrl,
         bannerUrl: n.bannerUrl,
         rubroPrincipalId: n.rubroPrincipalId,
@@ -464,18 +485,36 @@ export class NegociosRepositoryImpl implements INegociosRepository {
         alcanceEnvios: n.alcanceEnvios,
         direccionPrincipalResumen: uPrincipal?.direccionEscrita,
         barrioPrincipal: uPrincipal?.barrio,
+        creadoEn: n.creadoEn.toISOString(),
+        actualizadoEn: n.actualizadoEn.toISOString(),
       };
     });
   }
 
-  async update(id: string, input: UpdateNegocioInput): Promise<NegocioDTO> {
-    const { metodosPagoIds, ...data } = input;
+  async update(
+    id: string,
+    input: UpdateNegocioInput | ActualizarNegocioInput,
+  ): Promise<NegocioDTO> {
+    const rawInput = input as UpdateNegocioInput & Partial<ActualizarNegocioInput>;
+    const {
+      metodosPagoIds,
+      direccionEscrita,
+      direccion,
+      nombre,
+      tipo,
+      telefono,
+      instagram,
+      ...data
+    } = rawInput;
+    const nuevaDireccion = direccionEscrita ?? direccion;
 
     await prisma.$transaction(async (tx) => {
       await tx.negocio.update({
         where: { id },
         data: {
           ...data,
+          nombreComercial: data.nombreComercial ?? nombre ?? undefined,
+          whatsappPrincipal: data.whatsappPrincipal ?? telefono ?? undefined,
           eslogan: data.eslogan !== undefined ? data.eslogan : undefined,
           matriculaProfesional:
             data.matriculaProfesional !== undefined ? data.matriculaProfesional : undefined,
@@ -487,7 +526,11 @@ export class NegociosRepositoryImpl implements INegociosRepository {
           telefonoLinea: data.telefonoLinea !== undefined ? data.telefonoLinea : undefined,
           emailContacto: data.emailContacto !== undefined ? data.emailContacto : undefined,
           instagramHandle:
-            data.instagramHandle !== undefined ? data.instagramHandle : undefined,
+            data.instagramHandle !== undefined
+              ? data.instagramHandle
+              : instagram !== undefined
+                ? instagram
+                : undefined,
           facebookUrl: data.facebookUrl !== undefined ? data.facebookUrl : undefined,
           tiktokHandle: data.tiktokHandle !== undefined ? data.tiktokHandle : undefined,
           sitioWebUrl: data.sitioWebUrl !== undefined ? data.sitioWebUrl : undefined,
@@ -495,6 +538,13 @@ export class NegociosRepositoryImpl implements INegociosRepository {
             data.politicaCambios !== undefined ? data.politicaCambios : undefined,
         },
       });
+
+      if (nuevaDireccion !== undefined) {
+        await tx.ubicacionNegocio.updateMany({
+          where: { negocioId: id, esPrincipal: true },
+          data: { direccionEscrita: nuevaDireccion },
+        });
+      }
 
       if (metodosPagoIds) {
         await tx.negocioMetodoPago.deleteMany({ where: { negocioId: id } });

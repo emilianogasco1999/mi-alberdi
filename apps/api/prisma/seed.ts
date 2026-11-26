@@ -1,8 +1,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
-import bcrypt from 'bcrypt';
 import { PrismaClient, Prisma, CodigoPlan, TipoPublicacion } from '@prisma/client';
+import { auth } from '../src/core/infrastructure/auth/better-auth.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -377,27 +377,33 @@ async function main() {
   }
   console.log('✅ 4/5 Rubros y categorías de Juan Bautista Alberdi sincronizados.');
 
-  // 5. Usuario Administrador inicial + Comercio y Oficio de demostración
-  const adminPasswordHash = await bcrypt.hash('AdminAlberdi2026!', 10);
+  // 5. Usuario Administrador inicial con Better Auth
+  const adminEmail = 'admin@mialberdi.com.ar';
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail },
+  });
 
-  const adminUser = await prisma.perfilUsuario.upsert({
-    where: { email: 'admin@mialberdi.com.ar' },
-    update: {
-      rol: 'admin',
-      estado: 'activo',
-    },
-    create: {
-      nombre: 'Administrador',
-      apellido: 'Mi Alberdi',
-      email: 'admin@mialberdi.com.ar',
+  if (!existingAdmin) {
+    await auth.api.createUser({
+      body: {
+        name: 'Administrador Mi Alberdi',
+        email: adminEmail,
+        password: 'AdminAlberdi2026!',
+        role: 'admin',
+      },
+    });
+  }
+
+  const adminUser = await prisma.user.update({
+    where: { email: adminEmail },
+    data: {
+      role: 'admin',
       telefono: '+5493865000000',
-      passwordHash: adminPasswordHash,
-      rol: 'admin',
-      estado: 'activo',
       puedeProbarPremium: true,
+      emailVerified: true,
     },
   });
-  console.log(`✅ 5/5 Usuario Admin listo: ${adminUser.email} (Password: AdminAlberdi2026!)`);
+  console.log(`✅ 5/5 Usuario Admin listo con Better Auth: ${adminUser.email} (Password: AdminAlberdi2026!)`);
 
   console.log('🎉 ¡Seed de Mi Alberdi finalizado con éxito!');
 }

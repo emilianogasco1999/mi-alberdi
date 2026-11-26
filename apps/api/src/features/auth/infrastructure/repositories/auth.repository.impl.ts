@@ -6,14 +6,14 @@ import { UserMapper } from '../mappers/user.mapper.js';
 
 export class AuthRepositoryImpl implements IAuthRepository {
   async findByEmail(email: string): Promise<User | null> {
-    const raw = await prisma.perfilUsuario.findUnique({
+    const raw = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
     return raw ? UserMapper.toDomain(raw) : null;
   }
 
   async findById(id: string): Promise<User | null> {
-    const raw = await prisma.perfilUsuario.findUnique({
+    const raw = await prisma.user.findUnique({
       where: { id },
     });
     return raw ? UserMapper.toDomain(raw) : null;
@@ -22,16 +22,15 @@ export class AuthRepositoryImpl implements IAuthRepository {
   async create(
     data: Omit<RegisterUserInput, 'password'> & { passwordHash: string },
   ): Promise<User> {
-    const raw = await prisma.perfilUsuario.create({
+    const raw = await prisma.user.create({
       data: {
-        nombre: data.nombre,
-        apellido: data.apellido ?? null,
+        id: crypto.randomUUID(),
+        name: data.nombre + (data.apellido ? ` ${data.apellido}` : ''),
         email: data.email.toLowerCase(),
         telefono: data.telefono ?? null,
-        passwordHash: data.passwordHash,
+        role: 'vecino',
       },
     });
     return UserMapper.toDomain(raw);
   }
 }
-
