@@ -1,34 +1,84 @@
-import { describe, it } from 'node:test';
+import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
-import jwt from 'jsonwebtoken';
-import { envs } from '@config/environment.js';
 import { ROLES_USUARIO, type CrearUsuarioComercianteInput } from '@mi-alberdi/shared';
 import { createApp } from '../../../../app.js';
+import { auth } from '@core/infrastructure/auth/better-auth.config.js';
+import { prisma } from '@core/infrastructure/database/prisma.service.js';
 import { InMemoryAuthService } from '../../infrastructure/adapters/in-memory-auth.service.js';
 import { UsuariosRoutes } from '../routes/usuarios.routes.js';
 import express from 'express';
 import { errorHandler } from '@core/presentation/middlewares/errorHandler.middleware.js';
 
 describe('Integración: POST /api/admin/usuarios', () => {
-  // Generar tokens para pruebas de autorización
-  const adminToken = jwt.sign(
-    { id: 'admin-uuid-1', email: 'admin@alberdi.com', rol: ROLES_USUARIO.ADMIN },
-    envs.JWT_SECRET,
-    { expiresIn: '1h' },
-  );
+  const mainApp = createApp();
+  let adminCookies: string[] = [];
+  let vecinoCookies: string[] = [];
+  let comercianteCookies: string[] = [];
 
-  const vecinoToken = jwt.sign(
-    { id: 'vecino-uuid-1', email: 'vecino@alberdi.com', rol: ROLES_USUARIO.VECINO },
-    envs.JWT_SECRET,
-    { expiresIn: '1h' },
-  );
+  before(async () => {
+    // 1. Iniciar sesión como Admin inicial del seed
+    const adminLoginRes = await request(mainApp)
+      .post('/api/auth/sign-in/email')
+      .send({
+        email: 'admin@mialberdi.com.ar',
+        password: 'AdminAlberdi2026!',
+      });
+    adminCookies = (adminLoginRes.headers['set-cookie'] as unknown as string[]) || [];
 
-  const comercianteToken = jwt.sign(
-    { id: 'comerciante-uuid-1', email: 'comerciante@alberdi.com', rol: ROLES_USUARIO.COMERCIANTE },
-    envs.JWT_SECRET,
-    { expiresIn: '1h' },
-  );
+    // 2. Crear / autenticar usuario Vecino para pruebas de autorización (403)
+    const vecinoEmail = 'vecino-test-rbac@mialberdi.com.ar';
+    const testPassword = 'Password123!';
+    try {
+      await auth.api.createUser({
+        body: {
+          name: 'Vecino Test RBAC',
+          email: vecinoEmail,
+          password: testPassword,
+        },
+      });
+    } catch {
+      // Ya registrado previamente
+    }
+    await prisma.user.update({
+      where: { email: vecinoEmail },
+      data: { role: 'vecino' },
+    });
+
+    const vecinoLoginRes = await request(mainApp)
+      .post('/api/auth/sign-in/email')
+      .send({
+        email: vecinoEmail,
+        password: testPassword,
+      });
+    vecinoCookies = (vecinoLoginRes.headers['set-cookie'] as unknown as string[]) || [];
+
+    // 3. Crear / autenticar usuario Comerciante para pruebas de autorización (403)
+    const comercianteEmail = 'comerciante-test-rbac@mialberdi.com.ar';
+    try {
+      await auth.api.createUser({
+        body: {
+          name: 'Comerciante Test RBAC',
+          email: comercianteEmail,
+          password: testPassword,
+        },
+      });
+    } catch {
+      // Ya registrado previamente
+    }
+    await prisma.user.update({
+      where: { email: comercianteEmail },
+      data: { role: 'comerciante' },
+    });
+
+    const comercianteLoginRes = await request(mainApp)
+      .post('/api/auth/sign-in/email')
+      .send({
+        email: comercianteEmail,
+        password: testPassword,
+      });
+    comercianteCookies = (comercianteLoginRes.headers['set-cookie'] as unknown as string[]) || [];
+  });
 
   // Helper para crear app de prueba con InMemoryAuthService aislado
   const createTestApp = (authService?: InMemoryAuthService) => {
@@ -51,7 +101,7 @@ describe('Integración: POST /api/admin/usuarios', () => {
 
     const res = await request(app)
       .post('/api/admin/usuarios')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Cookie', adminCookies)
       .send(payload);
 
     assert.strictEqual(res.status, 201);
@@ -77,7 +127,7 @@ describe('Integración: POST /api/admin/usuarios', () => {
 
     const res = await request(app)
       .post('/api/admin/usuarios')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Cookie', adminCookies)
       .send(invalidPayload);
 
     assert.strictEqual(res.status, 400);
@@ -116,7 +166,7 @@ describe('Integración: POST /api/admin/usuarios', () => {
     // Intento con rol Vecino
     const resVecino = await request(app)
       .post('/api/admin/usuarios')
-      .set('Authorization', `Bearer ${vecinoToken}`)
+      .set('Cookie', vecinoCookies)
       .send(payload);
 
     assert.strictEqual(resVecino.status, 403);
@@ -126,11 +176,12 @@ describe('Integración: POST /api/admin/usuarios', () => {
     // Intento con rol Comerciante
     const resComerciante = await request(app)
       .post('/api/admin/usuarios')
-      .set('Authorization', `Bearer ${comercianteToken}`)
+      .set('Cookie', comercianteCookies)
       .send(payload);
 
     assert.strictEqual(resComerciante.status, 403);
     assert.strictEqual(resComerciante.body.ok, false);
+    assert.match(resComerciante.body.error.message, /permisos suficientes/i);
   });
 
   it('5. Retorna 409 Conflict si el email ya existe en el sistema', async () => {
@@ -146,14 +197,14 @@ describe('Integración: POST /api/admin/usuarios', () => {
     // Primera creación exitosa
     const res1 = await request(app)
       .post('/api/admin/usuarios')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Cookie', adminCookies)
       .send(payload);
     assert.strictEqual(res1.status, 201);
 
     // Segunda creación con el mismo email -> conflicto
     const res2 = await request(app)
       .post('/api/admin/usuarios')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Cookie', adminCookies)
       .send({
         nombre: 'Otra Panadería',
         email: 'LAESPIGA@alberdi.com',
