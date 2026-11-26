@@ -7,22 +7,28 @@ import type {
   TipoPerfilComercial,
 } from '../constants/domain.js';
 import type {
+  ActualizarNegocioInput,
   AltaNegocioWizardInput,
   ConfigurarHorariosSemanaInput,
+  CrearNegocioInput,
   CreateNegocioInput,
   CreateSucursalInput,
   HorarioItemInput,
+  NegocioResponseDto,
   UpdateNegocioInput,
   UpdateSucursalInput,
   VincularMetodosPagoInput,
 } from '../schemas/negocio.schema.js';
 
 export type {
+  ActualizarNegocioInput,
   AltaNegocioWizardInput,
   ConfigurarHorariosSemanaInput,
+  CrearNegocioInput,
   CreateNegocioInput,
   CreateSucursalInput,
   HorarioItemInput,
+  NegocioResponseDto,
   UpdateNegocioInput,
   UpdateSucursalInput,
   VincularMetodosPagoInput,
