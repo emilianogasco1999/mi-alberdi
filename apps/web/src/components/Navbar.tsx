@@ -14,7 +14,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 font-bold text-white shadow-xs">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary font-bold text-white shadow-xs">
             A
           </span>
           <div className="flex flex-col">
@@ -27,12 +27,21 @@ export function Navbar() {
           </div>
         </Link>
 
+        <nav aria-label="Información institucional" className="hidden items-center gap-6 md:flex">
+          <Link href="/quienes-somos" className="text-sm font-medium text-ink-soft hover:text-primary">
+            Quiénes somos
+          </Link>
+          <Link href="/faq" className="text-sm font-medium text-ink-soft hover:text-primary">
+            FAQ
+          </Link>
+        </nav>
+
         <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-2 sm:gap-4">
               {/* Tarjeta con datos del usuario logueado */}
               <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 shadow-2xs">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cream text-primary">
                   <UserIcon className="h-4 w-4" />
                 </div>
                 <div className="hidden flex-col text-left sm:flex">
