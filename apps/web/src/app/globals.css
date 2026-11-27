@@ -1,29 +1,2 @@
 @import "tailwindcss";
 
-/*
- * Design tokens de Mi Alberdi (fuente: DESIGN.md / Penpot "MiAlberdi").
- * Usar estos tokens en lugar de hex inline.
- */
-@theme {
-  --color-primary: #114b33;
-  --color-primary-dark: #0b3322;
-  --color-primary-light: #1b6b4a;
-  --color-cream: #f2e5c9;
-  --color-cream-light: #faf6ee;
-  --color-ink: #0f172a;
-  --color-ink-soft: #1e293b;
-  --color-muted: #64748b;
-  --color-outline: #cbd5e1;
-  --color-hairline: #e2e8f0;
-  --color-surface-soft: #f1f5f9;
-  --color-surface-faint: #f8fafc;
-  --color-success: #059669;
-
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-oswald), ui-sans-serif, system-ui, sans-serif;
-
-  --radius-chip: 6px;
-  --radius-input: 12px;
-  --radius-card: 12px;
-  --radius-panel: 18px;
-}

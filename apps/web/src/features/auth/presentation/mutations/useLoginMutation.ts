@@ -18,16 +18,15 @@ export function useLoginMutation() {
   return useMutation({
     mutationFn: (credentials: LoginInput) => loginUseCase.execute(credentials),
     onSuccess: (session) => {
-      setSession(session.user.toDTO());
+      setSession(session.user.toDTO(), session.accessToken);
       toast.success(`¡Bienvenido a Mi Alberdi, ${session.user.nombreCompleto}!`);
       router.push('/');
     },
     onError: (error: unknown) => {
-      const err = error as { response?: { status?: number } };
+      const err = error as { response?: { data?: { error?: { message?: string } } } };
       const message =
-        err?.response?.status === 401 || err?.response?.status === 400
-          ? 'Correo o contraseña incorrectos.'
-          : 'No se pudo iniciar sesión. Intentá de nuevo en unos minutos.';
+        err?.response?.data?.error?.message ??
+        'No se pudo iniciar sesión. Verificá tus credenciales.';
       toast.error(message);
     },
   });
