@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Oswald, Poppins } from 'next/font/google';
 import { AppProviders } from '@/core/providers/AppProviders';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import './globals.css';
 
 const oswald = Oswald({
@@ -35,6 +36,7 @@ export default function RootLayout({
         <AppProviders>
           <Navbar />
           <div className="flex-1">{children}</div>
+          <Footer />
         </AppProviders>
       </body>
     </html>
