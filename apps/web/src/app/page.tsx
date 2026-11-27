@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { Store, Wrench, MapPin, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmergenciasBarriales } from '@/features/home/components/emergencias-barriales';
 
 export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
       <div className="space-y-6 text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3.5 py-1 text-xs font-semibold text-blue-800">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-cream px-3.5 py-1 text-xs font-semibold text-primary">
           <MapPin className="h-3.5 w-3.5" />
           Juan Bautista Alberdi, Tucumán
         </span>
@@ -28,7 +29,7 @@ export default function HomePage() {
 
         <div className="grid gap-4 pt-10 text-left sm:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
-            <Store className="mb-3 h-6 w-6 text-blue-600" />
+            <Store className="mb-3 h-6 w-6 text-primary" />
             <h2 className="font-semibold text-slate-900">Comercios y Sucursales</h2>
             <p className="mt-1 text-sm text-slate-600">
               Vidriera digital con ubicación en el mapa, horarios cortados y catálogo.
@@ -36,7 +37,7 @@ export default function HomePage() {
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
-            <Wrench className="mb-3 h-6 w-6 text-blue-600" />
+            <Wrench className="mb-3 h-6 w-6 text-primary" />
             <h2 className="font-semibold text-slate-900">Oficios y Profesionales</h2>
             <p className="mt-1 text-sm text-slate-600">
               Plomeros, electricistas, gasistas y profesionales a domicilio o por turno.
@@ -44,13 +45,15 @@ export default function HomePage() {
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
-            <MessageCircle className="mb-3 h-6 w-6 text-blue-600" />
+            <MessageCircle className="mb-3 h-6 w-6 text-primary" />
             <h2 className="font-semibold text-slate-900">Contacto 100% Directo</h2>
             <p className="mt-1 text-sm text-slate-600">
               Hablás directo al WhatsApp del comerciante o especialista sin intermediarios.
             </p>
           </div>
         </div>
+
+        <EmergenciasBarriales />
       </div>
     </main>
   );
