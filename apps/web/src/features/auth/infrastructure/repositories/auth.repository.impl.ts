@@ -1,6 +1,7 @@
 import type { AuthUserDTO, LoginInput, RolUsuario } from '@mi-alberdi/shared';
-import { apiClient } from '@/core/api/api.client';
+import { authClient } from '@/lib/auth-client';
 import { User } from '../../domain/entities/user.entity';
+import { AuthServiceError, InvalidCredentialsError } from '../../domain/errors/auth.errors';
 import type {
   AuthSession,
   IAuthRepository,
@@ -17,14 +18,6 @@ interface BetterAuthUser {
   puedeProbarPremium?: boolean | null;
 }
 
-interface SignInResponse {
-  user: BetterAuthUser;
-}
-
-interface GetSessionResponse {
-  user: BetterAuthUser;
-}
-
 const toAuthUserDTO = (raw: BetterAuthUser): AuthUserDTO => ({
   id: raw.id,
   nombre: raw.name,
@@ -36,24 +29,40 @@ const toAuthUserDTO = (raw: BetterAuthUser): AuthUserDTO => ({
   puedeProbarPremium: raw.puedeProbarPremium ?? true,
 });
 
+const INVALID_CREDENTIALS_STATUSES = new Set([400, 401]);
+
 /**
- * Repositorio de autenticación sobre Better Auth (/api/auth/*).
- * La sesión viaja en la cookie HttpOnly que emite el servidor (withCredentials).
+ * Repositorio de autenticación sobre Better Auth (authClient -> /api/auth/*).
+ * La sesión viaja en la cookie HttpOnly que emite el servidor.
  */
 export class AuthRepositoryImpl implements IAuthRepository {
   async login(credentials: LoginInput): Promise<AuthSession> {
-    const { data } = await apiClient.post<SignInResponse>('/auth/sign-in/email', credentials);
+    const { data, error } = await authClient.signIn.email({
+      email: credentials.email,
+      password: credentials.password,
+    });
+
+    if (error || !data) {
+      if (error?.status && INVALID_CREDENTIALS_STATUSES.has(error.status)) {
+        throw new InvalidCredentialsError();
+      }
+      throw new AuthServiceError();
+    }
+
     return { user: new User(toAuthUserDTO(data.user)) };
   }
 
   async logout(): Promise<void> {
-    await apiClient.post('/auth/sign-out', {});
+    const { error } = await authClient.signOut();
+    if (error) {
+      throw new AuthServiceError();
+    }
   }
 
   async getMe(): Promise<User> {
-    const { data } = await apiClient.get<GetSessionResponse | null>('/auth/get-session');
-    if (!data?.user) {
-      throw new Error('No hay una sesión activa');
+    const { data, error } = await authClient.getSession();
+    if (error || !data?.user) {
+      throw new AuthServiceError('No hay una sesión activa');
     }
     return new User(toAuthUserDTO(data.user));
   }

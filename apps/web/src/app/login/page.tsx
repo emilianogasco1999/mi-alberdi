@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   description: 'Accedé a tu panel de comerciante, oficio o vecino en Mi Alberdi',
 };
 
-export default function Page() {
-  return <LoginPage />;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnUrl?: string }>;
+}) {
+  const { returnUrl } = await searchParams;
+  return <LoginPage returnUrl={returnUrl} />;
 }

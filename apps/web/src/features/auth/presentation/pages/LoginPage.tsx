@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import { LoginForm } from '../components/LoginForm';
 
-export function LoginPage() {
+interface LoginPageProps {
+  returnUrl?: string | null;
+}
+
+export function LoginPage({ returnUrl }: LoginPageProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md space-y-6 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -17,7 +21,7 @@ export function LoginPage() {
           </p>
         </div>
 
-        <LoginForm />
+        <LoginForm returnUrl={returnUrl} />
 
         <div className="text-center text-xs text-slate-500">
           <Link href="/" className="font-medium text-primary hover:underline">
