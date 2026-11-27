@@ -11,7 +11,7 @@ export function PlanesPage() {
   const searchParams = useSearchParams();
   const statusParam = searchParams.get('status');
 
-  const { user, accessToken } = useAuthStore();
+  const { user } = useAuthStore();
   const [planes, setPlanes] = useState<PlanCatalogoDTO[]>([]);
   const [negocioId, setNegocioId] = useState<string>('f549aa39-a7ed-4e02-ac6d-ea3a50f62977');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export function PlanesPage() {
   }, [statusParam]);
 
   const handlePagarConMercadoPago = async (planCodigo: 'plata' | 'oro') => {
-    if (!accessToken) {
+    if (!user) {
       setMensajeError('No se encontró una sesión activa. Por favor iniciá sesión en /login primero.');
       return;
     }
@@ -65,11 +65,6 @@ export function PlanesPage() {
           negocioId: negocioId.trim(),
           planCodigo,
           periodoMeses: 1,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
         },
       );
 
@@ -137,7 +132,7 @@ export function PlanesPage() {
 
           {/* Estado de Sesión */}
           <div className="mt-4 flex justify-center">
-            {user && accessToken ? (
+            {user ? (
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>

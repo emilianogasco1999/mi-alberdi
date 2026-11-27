@@ -6,7 +6,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md space-y-6 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="space-y-2 text-center">
-          <span className="inline-block rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+          <span className="inline-block rounded-full bg-cream-light px-3 py-1 text-xs font-semibold text-primary">
             Juan Bautista Alberdi
           </span>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -20,7 +20,7 @@ export function LoginPage() {
         <LoginForm />
 
         <div className="text-center text-xs text-slate-500">
-          <Link href="/" className="font-medium text-blue-600 hover:underline">
+          <Link href="/" className="font-medium text-primary hover:underline">
             ← Volver al inicio
           </Link>
         </div>

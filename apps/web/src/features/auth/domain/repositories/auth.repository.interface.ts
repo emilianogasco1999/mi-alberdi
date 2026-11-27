@@ -3,7 +3,6 @@ import type { User } from '../entities/user.entity';
 
 export interface AuthSession {
   user: User;
-  accessToken: string;
 }
 
 export interface IAuthRepository {
