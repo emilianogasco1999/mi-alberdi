@@ -27,6 +27,15 @@ export function Navbar() {
           </div>
         </Link>
 
+        <nav aria-label="Información institucional" className="hidden items-center gap-6 md:flex">
+          <Link href="/quienes-somos" className="text-sm font-medium text-ink-soft hover:text-primary">
+            Quiénes somos
+          </Link>
+          <Link href="/faq" className="text-sm font-medium text-ink-soft hover:text-primary">
+            FAQ
+          </Link>
+        </nav>
+
         <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-2 sm:gap-4">
