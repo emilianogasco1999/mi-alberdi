@@ -10,6 +10,19 @@ Permite encontrar comercios y especialistas locales, ver sus ubicaciones y sucur
 
 En desarrollo utilizamos un esquema híbrido: los servicios de infraestructura (**PostgreSQL**, **PgAdmin**, **MinIO S3** y **Backup**) corren en contenedores Docker, mientras que el Backend (`apps/api`) y el Frontend (`apps/web`) corren localmente en tu máquina para máxima velocidad de recarga.
 
+### 0. Clonar el repositorio y sincronizar submódulos de agentes
+Si clonás el repositorio por primera vez, hacelo con la bandera `--recurse-submodules`:
+```bash
+git clone --recurse-submodules https://github.com/emilianogasco1999/mi-alberdi.git
+```
+> [!IMPORTANT]
+> **Para desarrolladores y Asistentes de IA (Antigravity, Cursor, Claude Code)**:
+> Si el repositorio ya fue clonado y la carpeta `.agents/skills/pnpm-monorepo` se encuentra vacía, inicializá el submódulo ejecutando:
+> ```bash
+> git submodule update --init --recursive
+> ```
+> O mediante el script de npm: `pnpm skills:init`.
+
 ### 1. Configurar las variables de entorno
 Copiá la plantilla en la raíz del proyecto:
 ```bash

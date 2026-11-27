@@ -30,7 +30,17 @@ const envSchema = z.object({
   S3_SECRET_KEY: z.string().default('mialberdi_minio_secret'),
   S3_BUCKET: z.string().default('mi-alberdi-archivos'),
   S3_REGION: z.string().default('us-east-1'),
+  MP_ACCESS_TOKEN: z.string().default(''),
+  MP_PUBLIC_KEY: z.string().default(''),
+  MP_WEBHOOK_SECRET: z.string().default(''),
+  MP_SUCCESS_URL: z.string().default('http://localhost:3000/planes?status=success'),
+  MP_FAILURE_URL: z.string().default('http://localhost:3000/planes?status=failure'),
+  MP_PENDING_URL: z.string().default('http://localhost:3000/planes?status=pending'),
+  MP_WEBHOOK_URL: z
+    .string()
+    .default('http://localhost:4000/api/membresias/pagos/webhook/mercadopago'),
 });
+
 
 const parsed = envSchema.safeParse(process.env);
 

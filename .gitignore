@@ -39,4 +39,5 @@ coverage/
 
 #Doc
 .doc/goyanova
+.doc/*.csv
 

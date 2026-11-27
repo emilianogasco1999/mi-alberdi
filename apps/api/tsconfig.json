@@ -7,6 +7,8 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "allowSyntheticDefaultImports": true,
+    "declaration": false,
+    "declarationMap": false,
     "paths": {
       "@core/*": ["src/core/*"],
       "@features/*": ["src/features/*"],

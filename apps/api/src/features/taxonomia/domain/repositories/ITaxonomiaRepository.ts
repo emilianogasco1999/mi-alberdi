@@ -3,6 +3,7 @@ import type {
   MetodoPagoCatalogo,
   RubroGrupoArbolDTO,
   CategoriaNodoDTO,
+  PlanCatalogo,
 } from '@mi-alberdi/shared';
 
 export interface ITaxonomiaRepository {
@@ -11,5 +12,5 @@ export interface ITaxonomiaRepository {
   getRubroBySlug(slug: string): Promise<RubroGrupo | null>;
   getCategoriasByRubro(rubroIdOrSlug: string): Promise<CategoriaNodoDTO[]>;
   getMetodosPago(): Promise<MetodoPagoCatalogo[]>;
+  getPlanes(): Promise<PlanCatalogo[]>;
 }
-

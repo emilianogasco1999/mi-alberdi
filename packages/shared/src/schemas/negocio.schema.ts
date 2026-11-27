@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import {
   ALCANCES_ENVIO_VALUES,
-  DIAS_SEMANA_VALUES,
+  CODIGOS_PLAN_VALUES,
   ESTADOS_NEGOCIO_VALUES,
   ESTADOS_VERIFICACION_VALUES,
   MODALIDADES_ATENCION_VALUES,
   TIPOS_PERFIL_COMERCIAL_VALUES,
-  TIPOS_PUBLICACION_VALUES,
+  type TipoPerfilComercial,
 } from '../constants/domain.js';
+import { NEGOCIOS_MESSAGES } from '../constants/negocios.messages.js';
 
 // =============================================================================
 // REGLAS Y REGEX COMUNES
@@ -16,13 +17,45 @@ import {
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 const HEX_COLOR_REGEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
 const PHONE_REGEX = /^\+?[0-9\s\-()]{8,30}$/;
+const INSTAGRAM_REGEX =
+  /^(?:@?[a-zA-Z0-9._]{1,30}|https?:\/\/(?:www\.)?instagram\.com\/[a-zA-Z0-9._]{1,30}\/?(?:\?.*)?)$/;
 
-export const tipoPerfilComercialSchema = z.enum(TIPOS_PERFIL_COMERCIAL_VALUES);
+const isAssetUrlOrPath = (val: string): boolean => {
+  if (val.startsWith('/')) {
+    return val.length > 1 && !val.includes('..');
+  }
+  try {
+    const parsed = new URL(val);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+export const assetUrlOrPathSchema = (message: string) =>
+  z.string().trim().refine(isAssetUrlOrPath, { message });
+
+export const tipoPerfilComercialSchema = z.preprocess(
+  (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
+  z.enum(TIPOS_PERFIL_COMERCIAL_VALUES, {
+    required_error: NEGOCIOS_MESSAGES.VALIDACION.TIPO_REQUERIDO,
+    invalid_type_error: NEGOCIOS_MESSAGES.VALIDACION.TIPO_INVALIDO,
+  }),
+);
+
+export const tipoNegocioHu03Schema = z.preprocess(
+  (val) => (typeof val === 'string' ? val.trim().toUpperCase() : val),
+  z.enum(['COMERCIO', 'OFICIO', 'PROFESIONAL', 'EMPRENDIMIENTO'], {
+    required_error: NEGOCIOS_MESSAGES.VALIDACION.TIPO_REQUERIDO,
+    invalid_type_error: NEGOCIOS_MESSAGES.VALIDACION.TIPO_INVALIDO,
+  }),
+);
+
 export const modalidadAtencionSchema = z.enum(MODALIDADES_ATENCION_VALUES);
 export const alcanceEnvioSchema = z.enum(ALCANCES_ENVIO_VALUES);
-export const tipoPublicacionSchema = z.enum(TIPOS_PUBLICACION_VALUES);
 export const estadoNegocioSchema = z.enum(ESTADOS_NEGOCIO_VALUES);
 export const estadoVerificacionSchema = z.enum(ESTADOS_VERIFICACION_VALUES);
+export const codigoPlanSchema = z.enum(CODIGOS_PLAN_VALUES);
 export const diaSemanaSchema = z.union([
   z.literal(0),
   z.literal(1),
@@ -171,18 +204,13 @@ export const createSucursalSchema = z.object({
     .default('Casa Central'),
   esPrincipal: z.boolean().default(false),
   direccionEscrita: z
-    .string({ required_error: 'La dirección es obligatoria' })
+    .string({ required_error: NEGOCIOS_MESSAGES.VALIDACION.DIRECCION_REQUERIDA })
     .trim()
-    .min(3, 'Ingresá una dirección válida')
-    .max(200, 'No puede superar 200 caracteres'),
+    .min(5, NEGOCIOS_MESSAGES.VALIDACION.DIRECCION_MIN)
+    .max(200, NEGOCIOS_MESSAGES.VALIDACION.DIRECCION_MAX),
   barrio: z.string().trim().max(80, 'Máximo 80 caracteres').optional().nullable(),
-  referenciaVisual: z
-    .string()
-    .trim()
-    .max(200, 'Máximo 200 caracteres')
-    .optional()
-    .nullable(),
-  fotoFachadaUrl: z.string().url('URL de fachada inválida').optional().nullable(),
+  referenciaVisual: z.string().trim().max(200, 'Máximo 200 caracteres').optional().nullable(),
+  fotoFachadaUrl: assetUrlOrPathSchema('URL de fachada inválida').optional().nullable(),
   whatsappSucursal: z
     .string()
     .trim()
@@ -228,34 +256,51 @@ export type UpdateSucursalInput = z.infer<typeof updateSucursalSchema>;
 // NEGOCIO / PERFIL COMERCIAL (ADAPTADO A COMERCIO, OFICIO, PROFESIONAL, ETC)
 // =============================================================================
 
+export const nombreNegocioFieldSchema = z
+  .string({ required_error: NEGOCIOS_MESSAGES.VALIDACION.NOMBRE_REQUERIDO })
+  .trim()
+  .min(3, NEGOCIOS_MESSAGES.VALIDACION.NOMBRE_MIN)
+  .max(100, NEGOCIOS_MESSAGES.VALIDACION.NOMBRE_MAX);
+
+export const telefonoNegocioFieldSchema = z
+  .string({ required_error: NEGOCIOS_MESSAGES.VALIDACION.TELEFONO_REQUERIDO })
+  .trim()
+  .regex(PHONE_REGEX, NEGOCIOS_MESSAGES.VALIDACION.TELEFONO_INVALIDO)
+  .max(30);
+
+export const direccionNegocioFieldSchema = z
+  .string({ required_error: NEGOCIOS_MESSAGES.VALIDACION.DIRECCION_REQUERIDA })
+  .trim()
+  .min(5, NEGOCIOS_MESSAGES.VALIDACION.DIRECCION_MIN)
+  .max(200, NEGOCIOS_MESSAGES.VALIDACION.DIRECCION_MAX);
+
+export const instagramNegocioFieldSchema = z
+  .string()
+  .trim()
+  .regex(INSTAGRAM_REGEX, NEGOCIOS_MESSAGES.VALIDACION.INSTAGRAM_INVALIDO)
+  .max(150)
+  .optional()
+  .nullable();
+
 export const baseNegocioSchema = z.object({
   tipoPerfil: tipoPerfilComercialSchema,
-  rubroPrincipalId: z.string().uuid('ID de rubro principal inválido'),
-  nombreComercial: z
-    .string({ required_error: 'El nombre comercial o del oficio es obligatorio' })
-    .trim()
-    .min(2, 'Debe tener al menos 2 caracteres')
-    .max(120, 'No puede superar los 120 caracteres'),
+  rubroPrincipalId: z.string().uuid(NEGOCIOS_MESSAGES.VALIDACION.RUBRO_INVALIDO),
+  nombreComercial: nombreNegocioFieldSchema,
   eslogan: z.string().trim().max(160, 'Máximo 160 caracteres').optional().nullable(),
-  matriculaProfesional: z
-    .string()
-    .trim()
-    .max(60, 'Máximo 60 caracteres')
-    .optional()
-    .nullable(),
+  matriculaProfesional: z.string().trim().max(60, 'Máximo 60 caracteres').optional().nullable(),
   descripcion: z
     .string()
     .trim()
-    .max(2000, 'La descripción no puede superar los 2000 caracteres')
+    .max(2000, NEGOCIOS_MESSAGES.VALIDACION.DESCRIPCION_MAX)
     .optional()
     .nullable(),
-  logoUrl: z.string().url('URL de logo inválida').optional().nullable(),
-  bannerUrl: z.string().url('URL de banner inválida').optional().nullable(),
-  whatsappPrincipal: z
-    .string({ required_error: 'El número de WhatsApp es obligatorio para recibir consultas' })
-    .trim()
-    .regex(PHONE_REGEX, 'Ingresá un número de WhatsApp válido (ej: +54 9 3865 123456)')
-    .max(30),
+  logoUrl: assetUrlOrPathSchema(NEGOCIOS_MESSAGES.VALIDACION.LOGO_URL_INVALIDA)
+    .optional()
+    .nullable(),
+  bannerUrl: assetUrlOrPathSchema(NEGOCIOS_MESSAGES.VALIDACION.BANNER_URL_INVALIDA)
+    .optional()
+    .nullable(),
+  whatsappPrincipal: telefonoNegocioFieldSchema,
   whatsappMensajeDefault: z
     .string()
     .trim()
@@ -277,13 +322,7 @@ export const baseNegocioSchema = z.object({
     .max(255)
     .optional()
     .nullable(),
-  instagramHandle: z
-    .string()
-    .trim()
-    .regex(/^[a-zA-Z0-9._]{1,30}$/, 'Usuario de Instagram inválido')
-    .max(80)
-    .optional()
-    .nullable(),
+  instagramHandle: instagramNegocioFieldSchema,
   facebookUrl: z.string().trim().max(255).optional().nullable(),
   tiktokHandle: z
     .string()
@@ -293,17 +332,13 @@ export const baseNegocioSchema = z.object({
     .optional()
     .nullable(),
   sitioWebUrl: z.string().trim().url('URL de sitio web inválida').optional().nullable(),
+  direccionEscrita: direccionNegocioFieldSchema.optional(),
   modalidadPrincipal: modalidadAtencionSchema.default('horarios_fijos'),
   atiendeADomicilio: z.boolean().default(false),
   haceEnvios: z.boolean().default(false),
   alcanceEnvios: alcanceEnvioSchema.default('sin_envio'),
   aceptaCuotas: z.boolean().default(false),
-  politicaCambios: z
-    .string()
-    .trim()
-    .max(1000, 'Máximo 1000 caracteres')
-    .optional()
-    .nullable(),
+  politicaCambios: z.string().trim().max(1000, 'Máximo 1000 caracteres').optional().nullable(),
   metodosPagoIds: z.array(z.string().uuid('ID de método de pago inválido')).optional(),
 });
 
@@ -311,7 +346,7 @@ export const createNegocioSchema = baseNegocioSchema.superRefine((data, ctx) => 
   if (data.haceEnvios && data.alcanceEnvios === 'sin_envio') {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Si realizás envíos, debés seleccionar el alcance (ej: Solo Alberdi)',
+      message: NEGOCIOS_MESSAGES.VALIDACION.ALCANCE_ENVIO_REQUERIDO,
       path: ['alcanceEnvios'],
     });
   }
@@ -325,6 +360,207 @@ export const updateNegocioSchema = baseNegocioSchema.partial().extend({
 });
 
 export type UpdateNegocioInput = z.infer<typeof updateNegocioSchema>;
+
+// =============================================================================
+// CONTRATOS HU-03 (SUB-BE-03.1): CrearNegocioSchema, ActualizarNegocioSchema y NegocioResponseDto
+// =============================================================================
+
+const normalizeNegocioPayload = (raw: unknown): unknown => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const obj = raw as Record<string, unknown>;
+  const normalized: Record<string, unknown> = { ...obj };
+
+  if (normalized.nombre === undefined && normalized.nombreComercial !== undefined) {
+    normalized.nombre = normalized.nombreComercial;
+  }
+  if (normalized.nombreComercial === undefined && normalized.nombre !== undefined) {
+    normalized.nombreComercial = normalized.nombre;
+  }
+
+  if (normalized.tipo === undefined && normalized.tipoPerfil !== undefined) {
+    normalized.tipo = normalized.tipoPerfil;
+  }
+  if (normalized.tipoPerfil === undefined && normalized.tipo !== undefined) {
+    normalized.tipoPerfil = normalized.tipo;
+  }
+
+  if (normalized.telefono === undefined && normalized.whatsappPrincipal !== undefined) {
+    normalized.telefono = normalized.whatsappPrincipal;
+  }
+  if (normalized.whatsappPrincipal === undefined && normalized.telefono !== undefined) {
+    normalized.whatsappPrincipal = normalized.telefono;
+  }
+
+  if (normalized.direccion === undefined && normalized.direccionEscrita !== undefined) {
+    normalized.direccion = normalized.direccionEscrita;
+  }
+  if (normalized.direccionEscrita === undefined && normalized.direccion !== undefined) {
+    normalized.direccionEscrita = normalized.direccion;
+  }
+
+  if (normalized.instagram === undefined && normalized.instagramHandle !== undefined) {
+    normalized.instagram = normalized.instagramHandle;
+  }
+  if (normalized.instagramHandle === undefined && normalized.instagram !== undefined) {
+    normalized.instagramHandle = normalized.instagram;
+  }
+
+  return normalized;
+};
+
+const crearNegocioObjectSchema = z
+  .object({
+    nombre: nombreNegocioFieldSchema,
+    nombreComercial: nombreNegocioFieldSchema.optional(),
+    tipo: tipoNegocioHu03Schema,
+    tipoPerfil: tipoPerfilComercialSchema.optional(),
+    telefono: telefonoNegocioFieldSchema,
+    whatsappPrincipal: telefonoNegocioFieldSchema.optional(),
+    direccion: direccionNegocioFieldSchema,
+    direccionEscrita: direccionNegocioFieldSchema.optional(),
+    descripcion: z
+      .string()
+      .trim()
+      .max(2000, NEGOCIOS_MESSAGES.VALIDACION.DESCRIPCION_MAX)
+      .optional()
+      .nullable(),
+    instagram: instagramNegocioFieldSchema,
+    instagramHandle: instagramNegocioFieldSchema,
+    logoUrl: assetUrlOrPathSchema(NEGOCIOS_MESSAGES.VALIDACION.LOGO_URL_INVALIDA)
+      .optional()
+      .nullable(),
+    bannerUrl: assetUrlOrPathSchema(NEGOCIOS_MESSAGES.VALIDACION.BANNER_URL_INVALIDA)
+      .optional()
+      .nullable(),
+    rubroPrincipalId: z.string().uuid(NEGOCIOS_MESSAGES.VALIDACION.RUBRO_INVALIDO).optional(),
+    eslogan: z.string().trim().max(160, 'Máximo 160 caracteres').optional().nullable(),
+    matriculaProfesional: z.string().trim().max(60, 'Máximo 60 caracteres').optional().nullable(),
+    modalidadPrincipal: modalidadAtencionSchema.default('horarios_fijos'),
+    atiendeADomicilio: z.boolean().default(false),
+    haceEnvios: z.boolean().default(false),
+    alcanceEnvios: alcanceEnvioSchema.default('sin_envio'),
+    aceptaCuotas: z.boolean().default(false),
+    politicaCambios: z.string().trim().max(1000, 'Máximo 1000 caracteres').optional().nullable(),
+    metodosPagoIds: z.array(z.string().uuid('ID de método de pago inválido')).optional(),
+  })
+  .transform((data) => {
+    const tipoPerfil = (data.tipoPerfil ?? data.tipo.toLowerCase()) as TipoPerfilComercial;
+    const instagram = data.instagram ?? data.instagramHandle ?? null;
+    return {
+      ...data,
+      nombre: data.nombre,
+      nombreComercial: data.nombreComercial ?? data.nombre,
+      tipo: data.tipo,
+      tipoPerfil,
+      telefono: data.telefono,
+      whatsappPrincipal: data.whatsappPrincipal ?? data.telefono,
+      direccion: data.direccion,
+      direccionEscrita: data.direccionEscrita ?? data.direccion,
+      instagram,
+      instagramHandle: instagram,
+    };
+  });
+
+export const crearNegocioSchema = z.preprocess(
+  normalizeNegocioPayload,
+  crearNegocioObjectSchema,
+);
+
+export const CrearNegocioSchema = crearNegocioSchema;
+
+const actualizarNegocioObjectSchema = z
+  .object({
+    nombre: nombreNegocioFieldSchema.optional(),
+    nombreComercial: nombreNegocioFieldSchema.optional(),
+    tipo: tipoNegocioHu03Schema.optional(),
+    tipoPerfil: tipoPerfilComercialSchema.optional(),
+    telefono: telefonoNegocioFieldSchema.optional(),
+    whatsappPrincipal: telefonoNegocioFieldSchema.optional(),
+    direccion: direccionNegocioFieldSchema.optional(),
+    direccionEscrita: direccionNegocioFieldSchema.optional(),
+    descripcion: z
+      .string()
+      .trim()
+      .max(2000, NEGOCIOS_MESSAGES.VALIDACION.DESCRIPCION_MAX)
+      .optional()
+      .nullable(),
+    instagram: instagramNegocioFieldSchema,
+    instagramHandle: instagramNegocioFieldSchema,
+    logoUrl: assetUrlOrPathSchema(NEGOCIOS_MESSAGES.VALIDACION.LOGO_URL_INVALIDA)
+      .optional()
+      .nullable(),
+    bannerUrl: assetUrlOrPathSchema(NEGOCIOS_MESSAGES.VALIDACION.BANNER_URL_INVALIDA)
+      .optional()
+      .nullable(),
+    rubroPrincipalId: z.string().uuid(NEGOCIOS_MESSAGES.VALIDACION.RUBRO_INVALIDO).optional(),
+    eslogan: z.string().trim().max(160, 'Máximo 160 caracteres').optional().nullable(),
+    matriculaProfesional: z.string().trim().max(60, 'Máximo 60 caracteres').optional().nullable(),
+    estado: estadoNegocioSchema.optional(),
+    modalidadPrincipal: modalidadAtencionSchema.optional(),
+    atiendeADomicilio: z.boolean().optional(),
+    haceEnvios: z.boolean().optional(),
+    alcanceEnvios: alcanceEnvioSchema.optional(),
+    aceptaCuotas: z.boolean().optional(),
+    politicaCambios: z.string().trim().max(1000, 'Máximo 1000 caracteres').optional().nullable(),
+    metodosPagoIds: z.array(z.string().uuid('ID de método de pago inválido')).optional(),
+  })
+  .transform((data) => {
+    const out: Record<string, unknown> = { ...data };
+    if (data.nombre !== undefined) {
+      out.nombreComercial = data.nombreComercial ?? data.nombre;
+    }
+    if (data.tipo !== undefined || data.tipoPerfil !== undefined) {
+      out.tipoPerfil = (data.tipoPerfil ?? data.tipo?.toLowerCase()) as TipoPerfilComercial;
+    }
+    if (data.telefono !== undefined) {
+      out.whatsappPrincipal = data.whatsappPrincipal ?? data.telefono;
+    }
+    if (data.direccion !== undefined) {
+      out.direccionEscrita = data.direccionEscrita ?? data.direccion;
+    }
+    if (data.instagram !== undefined || data.instagramHandle !== undefined) {
+      const ig = data.instagram !== undefined ? data.instagram : data.instagramHandle;
+      out.instagram = ig;
+      out.instagramHandle = ig;
+    }
+    return out as typeof data;
+  });
+
+export const actualizarNegocioSchema = z.preprocess(
+  normalizeNegocioPayload,
+  actualizarNegocioObjectSchema,
+);
+
+export const ActualizarNegocioSchema = actualizarNegocioSchema;
+
+export const negocioResponseSchema = z.object({
+  id: z.string().uuid(),
+  slug: z.string(),
+  nombre: z.string(),
+  nombreComercial: z.string(),
+  tipo: z.enum(['COMERCIO', 'OFICIO', 'PROFESIONAL', 'EMPRENDIMIENTO']),
+  tipoPerfil: tipoPerfilComercialSchema,
+  telefono: z.string(),
+  whatsappPrincipal: z.string(),
+  direccion: z.string(),
+  direccionEscrita: z.string(),
+  descripcion: z.string().nullable().optional(),
+  instagram: z.string().nullable().optional(),
+  instagramHandle: z.string().nullable().optional(),
+  logoUrl: z.string().nullable().optional(),
+  bannerUrl: z.string().nullable().optional(),
+  rubroPrincipalId: z.string().uuid().optional(),
+  estado: estadoNegocioSchema,
+  planActual: codigoPlanSchema.optional(),
+  creadoEn: z.union([z.date(), z.string()]),
+  actualizadoEn: z.union([z.date(), z.string()]),
+});
+
+export const NegocioResponseSchema = negocioResponseSchema;
+
+export type CrearNegocioInput = z.infer<typeof crearNegocioSchema>;
+export type ActualizarNegocioInput = z.infer<typeof actualizarNegocioSchema>;
+export type NegocioResponseDto = z.infer<typeof negocioResponseSchema>;
 
 // =============================================================================
 // WIZARD COMPUESTO DE ONBOARDING
@@ -352,49 +588,9 @@ export const vincularMetodosPagoSchema = z.object({
       z.object({
         metodoPagoId: z.string().uuid('ID de método de pago inválido'),
         detalle: z.string().trim().max(100).optional().nullable(),
-      })
+      }),
     )
     .min(1, 'Debés indicar al menos un método de pago'),
 });
 
 export type VincularMetodosPagoInput = z.infer<typeof vincularMetodosPagoSchema>;
-
-// =============================================================================
-// PUBLICACIONES (CATÁLOGO Y DESTACADOS)
-// =============================================================================
-
-export const createPublicacionSchema = z.object({
-  negocioId: z.string().uuid('ID de negocio inválido'),
-  categoriaId: z.string().uuid('ID de categoría inválido'),
-  tipo: tipoPublicacionSchema,
-  titulo: z
-    .string({ required_error: 'El título de la publicación es obligatorio' })
-    .trim()
-    .min(3, 'El título debe tener al menos 3 caracteres')
-    .max(140, 'No puede superar los 140 caracteres'),
-  descripcion: z
-    .string({ required_error: 'La descripción es obligatoria' })
-    .trim()
-    .min(10, 'Describí mejor tu servicio o producto (mínimo 10 caracteres)')
-    .max(3000, 'Máximo 3000 caracteres'),
-  precioReferenciaArs: z.number().nonnegative('El precio no puede ser negativo').optional().nullable(),
-  etiquetaPrecio: z.string().trim().max(40, 'Máximo 40 caracteres').optional().nullable(),
-  modalidad: modalidadAtencionSchema.default('horarios_fijos'),
-  whatsappEspecifico: z
-    .string()
-    .trim()
-    .regex(PHONE_REGEX, 'Número de WhatsApp inválido')
-    .max(30)
-    .optional()
-    .nullable(),
-  mensajeWhatsappCustom: z.string().trim().max(250).optional().nullable(),
-  esDestacada: z.boolean().default(false),
-});
-
-export type CreatePublicacionInput = z.infer<typeof createPublicacionSchema>;
-
-export const updatePublicacionSchema = createPublicacionSchema
-  .omit({ negocioId: true })
-  .partial();
-
-export type UpdatePublicacionInput = z.infer<typeof updatePublicacionSchema>;

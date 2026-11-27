@@ -2,7 +2,7 @@
  * @openapi
  * tags:
  *   name: Taxonomía
- *   description: Catálogo jerárquico de rubros, categorías y medios de pago de Juan Bautista Alberdi
+ *   description: Catálogo jerárquico de rubros, categorías, medios de pago y planes de suscripción de Juan Bautista Alberdi
  */
 
 /**
@@ -56,3 +56,13 @@
  *         description: Lista de métodos de pago activos (Efectivo, Transferencia, MercadoPago, etc.)
  */
 
+/**
+ * @openapi
+ * /api/taxonomia/planes:
+ *   get:
+ *     summary: Obtener los planes de suscripción disponibles (Gratis, Plata, Oro)
+ *     tags: [Taxonomía]
+ *     responses:
+ *       200:
+ *         description: Lista de planes con sus características, límites y cupos de destacados
+ */

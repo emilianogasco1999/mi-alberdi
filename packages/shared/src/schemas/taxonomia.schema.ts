@@ -16,12 +16,11 @@ export const rubroGrupoSchema = z.object({
     .trim()
     .min(2)
     .max(80)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'El slug solo puede contener letras minúsculas, números y guiones'),
-  icono: z
-    .string({ required_error: 'El icono es obligatorio' })
-    .trim()
-    .min(1)
-    .max(60),
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      'El slug solo puede contener letras minúsculas, números y guiones',
+    ),
+  icono: z.string({ required_error: 'El icono es obligatorio' }).trim().min(1).max(60),
   colorHex: z
     .string()
     .trim()
@@ -63,7 +62,10 @@ export const categoriaSchema = z.object({
     .trim()
     .min(2)
     .max(100)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'El slug solo puede contener letras minúsculas, números y guiones'),
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      'El slug solo puede contener letras minúsculas, números y guiones',
+    ),
   tipoPermitido: tipoPermitidoSchema.optional().nullable(),
   icono: z.string().trim().max(60).optional().nullable(),
   colorHex: z
@@ -98,11 +100,7 @@ export const metodoPagoCatalogoSchema = z.object({
     .min(2)
     .max(40)
     .regex(/^[a-z0-9_]+$/, 'El código debe estar en minúsculas y snake_case'),
-  nombre: z
-    .string({ required_error: 'El nombre visible es obligatorio' })
-    .trim()
-    .min(2)
-    .max(60),
+  nombre: z.string({ required_error: 'El nombre visible es obligatorio' }).trim().min(2).max(60),
   icono: z.string().trim().max(60).optional().nullable(),
   activo: z.boolean().default(true),
 });
@@ -116,3 +114,27 @@ export const updateMetodoPagoCatalogoSchema = createMetodoPagoCatalogoSchema.par
 export type MetodoPagoCatalogo = z.infer<typeof metodoPagoCatalogoSchema>;
 export type CreateMetodoPagoCatalogoInput = z.infer<typeof createMetodoPagoCatalogoSchema>;
 export type UpdateMetodoPagoCatalogoInput = z.infer<typeof updateMetodoPagoCatalogoSchema>;
+
+// =============================================================================
+// ESQUEMAS: CATÁLOGO DE PLANES
+// =============================================================================
+
+export const planCatalogoSchema = z.object({
+  codigo: z.enum(['gratis', 'plata', 'oro']),
+  nombre: z.string().min(1).max(50),
+  precioMensualArs: z.number().nonnegative(),
+  maxPublicaciones: z.number().int().nonnegative(),
+  maxFotosPorPublicacion: z.number().int().nonnegative(),
+  cuposDestacados: z.number().int().nonnegative(),
+  maxSucursales: z.number().int().nonnegative(),
+  maxReelsActivos: z.number().int().nonnegative(),
+  prioridadBase: z.number().int(),
+  permiteEstadisticas: z.boolean(),
+  permitePinDestacado: z.boolean(),
+  permiteBanner: z.boolean(),
+  permiteAsistenteIa: z.boolean(),
+  caracteristicasBase: z.record(z.unknown()),
+  activo: z.boolean().default(true),
+});
+
+export type PlanCatalogo = z.infer<typeof planCatalogoSchema>;

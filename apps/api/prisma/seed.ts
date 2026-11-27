@@ -1,8 +1,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
-import bcrypt from 'bcrypt';
 import { PrismaClient, Prisma, CodigoPlan, TipoPublicacion } from '@prisma/client';
+import { auth } from '../src/core/infrastructure/auth/better-auth.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -169,6 +169,42 @@ async function main() {
     });
   }
   console.log('✅ 3/5 Métodos de pago sincronizados.');
+
+  // 3.1 Códigos Promocionales de Lanzamiento
+  const promos = [
+    {
+      codigo: 'ALBERDI-ORO-2026',
+      descripcion: 'Lanzamiento Mi Alberdi - 30 días de Plan Oro Bonificado',
+      planOtorgado: 'oro' as CodigoPlan,
+      diasVigencia: 30,
+      usosMaximos: 100,
+    },
+    {
+      codigo: 'ALBERDI-PLATA-2026',
+      descripcion: 'Lanzamiento Mi Alberdi - 30 días de Plan Plata Bonificado',
+      planOtorgado: 'plata' as CodigoPlan,
+      diasVigencia: 30,
+      usosMaximos: 100,
+    },
+  ];
+
+  for (const promo of promos) {
+    await prisma.codigoPromocional.upsert({
+      where: { codigo: promo.codigo },
+      update: {
+        descripcion: promo.descripcion,
+        planOtorgado: promo.planOtorgado,
+        diasVigencia: promo.diasVigencia,
+        usosMaximos: promo.usosMaximos,
+        activo: true,
+      },
+      create: {
+        ...promo,
+        activo: true,
+      },
+    });
+  }
+  console.log('✅ 3.1 Códigos promocionales sincronizados.');
 
   // 4. Rubros / Grupos y Categorías iniciales de Juan Bautista Alberdi
   const rubrosData: Array<{
@@ -341,27 +377,33 @@ async function main() {
   }
   console.log('✅ 4/5 Rubros y categorías de Juan Bautista Alberdi sincronizados.');
 
-  // 5. Usuario Administrador inicial + Comercio y Oficio de demostración
-  const adminPasswordHash = await bcrypt.hash('AdminAlberdi2026!', 10);
+  // 5. Usuario Administrador inicial con Better Auth
+  const adminEmail = 'admin@mialberdi.com.ar';
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail },
+  });
 
-  const adminUser = await prisma.perfilUsuario.upsert({
-    where: { email: 'admin@mialberdi.com.ar' },
-    update: {
-      rol: 'admin',
-      estado: 'activo',
-    },
-    create: {
-      nombre: 'Administrador',
-      apellido: 'Mi Alberdi',
-      email: 'admin@mialberdi.com.ar',
+  if (!existingAdmin) {
+    await auth.api.createUser({
+      body: {
+        name: 'Administrador Mi Alberdi',
+        email: adminEmail,
+        password: 'AdminAlberdi2026!',
+        role: 'admin',
+      },
+    });
+  }
+
+  const adminUser = await prisma.user.update({
+    where: { email: adminEmail },
+    data: {
+      role: 'admin',
       telefono: '+5493865000000',
-      passwordHash: adminPasswordHash,
-      rol: 'admin',
-      estado: 'activo',
       puedeProbarPremium: true,
+      emailVerified: true,
     },
   });
-  console.log(`✅ 5/5 Usuario Admin listo: ${adminUser.email} (Password: AdminAlberdi2026!)`);
+  console.log(`✅ 5/5 Usuario Admin listo con Better Auth: ${adminUser.email} (Password: AdminAlberdi2026!)`);
 
   console.log('🎉 ¡Seed de Mi Alberdi finalizado con éxito!');
 }

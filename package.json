@@ -14,7 +14,9 @@
     "prod:up": "docker compose --env-file .env -f .docker/prod/docker-compose.prod.yml up -d --build",
     "prod:down": "docker compose --env-file .env -f .docker/prod/docker-compose.prod.yml down",
     "build": "pnpm -r build",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "skills:init": "git submodule update --init --recursive",
+    "skills:update": "git submodule update --remote --merge"
   },
   "devDependencies": {
     "prettier": "^3.5.0",
